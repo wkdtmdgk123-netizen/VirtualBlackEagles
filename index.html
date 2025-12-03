@@ -1,0 +1,65 @@
+
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title data-i18n="page.title">Virtual Black Eagles - 홈페이지</title>
+		<link rel="stylesheet" href="/static/style.css">
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="container">
+			<h1 class="logo"><a href="/" data-i18n="brand">Virtual Black Eagles</a></h1>
+				<nav class="nav">
+					  <a href="/notice" data-i18n="nav.notice">공지사항</a>
+					  <a href="/about" data-i18n="nav.about">팀소개</a>
+					  <a href="/schedule" data-i18n="nav.services">일정</a>
+					  <a href="/contact" data-i18n="nav.contact">문의</a>
+				</nav>
+
+				<!-- Language switcher -->
+				<div class="lang-switch" aria-label="언어 선택">
+					<button id="lang-ko" class="lang-btn" aria-pressed="true">KR</button>
+					<button id="lang-en" class="lang-btn" aria-pressed="false">EN</button>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<section class="hero">
+				<div class="container">
+					<h2 data-i18n="hero.title">Republic Of Korea</h2>
+					<p data-i18n="hero.text">Virtual Black Eagles</p>
+					<a class="btn" href="#contact" data-i18n="hero.cta">more</a>
+				</div>
+			</section>
+
+			<section id="about" class="container section">
+				<h3 data-i18n="about.title">소개</h3>
+				<p data-i18n="about.text">Virtual Black Eagles</p>
+			</section>
+
+			<section id="services" class="container section">
+				<h3 data-i18n="services.title">서비스</h3>
+				<ul class="features">
+					<li data-i18n="services.li1">반응형 디자인</li>
+					<li data-i18n="services.li2">간단한 CMS 연동 가능</li>
+					<li data-i18n="services.li3">SEO 및 접근성 고려</li>
+				</ul>
+			</section>
+
+			<section id="contact" class="container section contact">
+				<h3 data-i18n="contact.title">문의</h3>
+				<p data-i18n="contact.text">이 사이트를 실제로 배포하거나 기능을 추가하려면 연락 주세요.</p>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<div class="container" data-i18n="footer">© 2025 블랙이글</div>
+		</footer>
+
+		<script src="/static/script.js"></script>
+	</body>
+</html>
+
