@@ -1,0 +1,71 @@
+{% extends "base_en.html" %}
+
+{% block title %}Announcements - Virtual Black Eagles{% endblock %}
+
+{% block banner %}
+<section class="hero banner" style="background-image: url('/static/images/hero.jpg')">
+  <div class="container">
+    <h1 class="banner-title">Announcements</h1>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<main class="container section notice-board">
+      <div class="notice-header" style="text-align: center;">
+        <h2>Announcements</h2>
+        <div class="notice-search" style="margin: 0 auto;">
+          <select class="search-category">
+            <option value="title">Title</option>
+            <option value="content">Content</option>
+            <option value="author">Author</option>
+          </select>
+          <input type="text" class="search-input" placeholder="Enter search term">
+          <button class="search-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <table class="notice-table">
+        <thead>
+          <tr>
+            <th class="col-number">No.</th>
+            <th class="col-title">Title</th>
+            <th class="col-author">Author</th>
+            <th class="col-date">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if notices %}
+            {% for notice in notices %}
+            <tr class="notice-row" onclick="location.href='/notice/{{ notice.id }}?lang=en'" style="cursor: pointer;">
+              <td class="col-number">{{ notice.id }}</td>
+              <td class="col-title" style="text-align: left; padding-left: 1rem;">{{ notice.title }}</td>
+              <td class="col-author">{{ notice.author }}</td>
+              <td class="col-date">{{ notice.created_at[:10] }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 3rem; color: #666;">
+                📭 No announcements available.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <button class="page-btn">◀</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">4</button>
+        <button class="page-btn">5</button>
+        <button class="page-btn">▶</button>
+  </div>
+</main>
+{% endblock %}

@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_en.html" %}
 
-{% block title %}Virtual Black Eagles - 홈페이지{% endblock %}
+{% block title %}Virtual Black Eagles - Home{% endblock %}
 
 {% block banner %}
 <section class="hero banner" style="background-image: url('{{ banner.background_image if banner else '/static/images/hero.jpg' }}'); min-height: 900px;">
@@ -20,21 +20,21 @@
 		{% if banner and banner.description %}
 		<p class="banner-description" style="color: {{ banner.description_color }};">{{ banner.description }}</p>
 		{% else %}
-		<p class="banner-description" style="color: white;">가상블랙이글스는 대한민국 블랙이글스의 다양한 특수비행을 통해 </p>
-		<p class="banner-description" style="color: white;">고도의 비행기량을 뽐내는 대한민국 가상 특수비행팀입니다.</p>
+		<p class="banner-description" style="color: white;">Virtual Black Eagles is the Republic of Korea's premier virtual aerobatic team,</p>
+		<p class="banner-description" style="color: white;">showcasing advanced flight skills through various special maneuvers.</p>
 		{% endif %}
 		
 		{% if banner and banner.button_text %}
-		<a class="btn" href="{{ banner.button_link or '#about' }}" data-i18n="hero.cta">{{ banner.button_text }}</a>
+		<a class="btn" href="{{ banner.button_link or '#about' }}">{{ banner.button_text }}</a>
 		{% else %}
-		<a class="btn" href="#about" data-i18n="hero.cta">more</a>
+		<a class="btn" href="#about">Learn More</a>
 		{% endif %}
 	</div>
 </section>
 {% endblock %}
 
 {% block content %}
-<!-- 동적 섹션 렌더링 -->
+<!-- Dynamic sections rendering -->
 {% if sections %}
 	{% for section in sections %}
 		{% if section.section_type == 'text' %}
@@ -66,7 +66,7 @@
 					<p>{{ section.content|safe }}</p>
 					{% endif %}
 					{% if section.link_url %}
-					<a href="{{ section.link_url }}" class="btn">{{ section.link_text or '자세히 보기' }}</a>
+					<a href="{{ section.link_url }}" class="btn">{{ section.link_text or 'Learn More' }}</a>
 					{% endif %}
 				</div>
 				{% if section.image_url %}
@@ -84,14 +84,14 @@
 	{% endfor %}
 {% endif %}
 
-<!-- Social Now 섹션 (항상 표시) -->
+<!-- Social Now section (always displayed) -->
 <section id="about" class="container section">
-	<h2 data-i18n="about.title" style="text-align: center; font-size: 2.5rem; letter-spacing: 1.2rem;">Social Now</h2>
+	<h2 style="text-align: center; font-size: 2.5rem; letter-spacing: 1.2rem;">Social Now</h2>
 </section>
 
 <section id="services" class="container section">
 	<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1200px; margin: 2rem auto; align-items: start;">
-		<!-- 페이스북 섹션 -->
+		<!-- Facebook section -->
 		<div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
 			<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; color: white;">
 				<div style="display: flex; align-items: center; gap: 1rem;">
@@ -123,7 +123,7 @@
 			</div>
 		</div>
 
-		<!-- 인스타그램 섹션 -->
+		<!-- Instagram section -->
 		<div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
 			<div style="background: linear-gradient(135deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); padding: 1.5rem; color: white;">
 				<div style="display: flex; align-items: center; gap: 1rem;">
@@ -137,13 +137,13 @@
 				</div>
 			</div>
 			<div style="padding: 1.5rem; overflow-y: auto; max-height: 600px;">
-				<!-- 인스타그램 게시물 1 -->
+				<!-- Instagram post 1 -->
 				<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DR0nfrNE8qh/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px auto 16px; max-width:100%; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"></blockquote>
 				
-				<!-- 인스타그램 게시물 2 -->
+				<!-- Instagram post 2 -->
 				<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DDwNq6qSKXN/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px auto 16px; max-width:100%; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"></blockquote>
 				
-				<!-- 인스타그램 게시물 3 -->
+				<!-- Instagram post 3 -->
 				<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DDrwB-jyW0V/" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px auto 16px; max-width:100%; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"></blockquote>
 			</div>
 		</div>
@@ -151,18 +151,18 @@
 </section>
 
 <section id="contact" class="container section contact-section">
-	<h3 data-i18n="contact.title">Contact Us</h3>
-	<p data-i18n="contact.text">Discord ㅣ Johnson#4553</p>
+	<h3>Contact Us</h3>
+	<p>Discord ㅣ Johnson#4553</p>
 </section>
 {% endblock %}
 
 {% block scripts %}
 <!-- Facebook SDK -->
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v18.0"></script>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0"></script>
 <!-- Instagram Embed -->
 <script async src="https://www.instagram.com/embed.js"></script>
 <script>
-// 인스타그램 임베드 강제 리로드
+// Force Instagram embed reload
 window.addEventListener('load', function() {
 	if (window.instgrm) {
 		window.instgrm.Embeds.process();
@@ -170,4 +170,3 @@ window.addEventListener('load', function() {
 });
 </script>
 {% endblock %}
-
