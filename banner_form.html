@@ -233,6 +233,25 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="vertical_position">수직 위치</label>
+                    <select id="vertical_position" name="vertical_position">
+                        <option value="flex-start" {% if banner.vertical_position == 'flex-start' %}selected{% endif %}>상단</option>
+                        <option value="center" {% if banner.vertical_position == 'center' or not banner.vertical_position %}selected{% endif %}>중앙</option>
+                        <option value="flex-end" {% if banner.vertical_position == 'flex-end' %}selected{% endif %}>하단</option>
+                    </select>
+                    <small>배너 내 텍스트의 수직 정렬 위치를 선택하세요.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="padding_top">상단 여백 (px)</label>
+                    <input type="number" id="padding_top" name="padding_top" 
+                           value="{{ banner.padding_top or 250 }}" 
+                           min="0" max="500" step="10"
+                           placeholder="250">
+                    <small>배너 상단 여백 크기 (0-500px). 기본값: 250px</small>
+                </div>
+
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">저장</button>
                     <a href="{{ url_for('admin_banner') }}" class="btn btn-secondary">취소</a>

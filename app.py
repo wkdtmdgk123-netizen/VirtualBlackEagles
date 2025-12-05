@@ -11,6 +11,30 @@ app.secret_key = os.environ.get('SECRET_KEY', 'devsecret-change-this-in-producti
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
+# Jinja2 필터 추가
+@app.template_filter('youtube_embed')
+def youtube_embed_filter(url):
+	"""YouTube URL을 embed URL로 변환"""
+	if not url:
+		return url
+	
+	# 이미 embed URL인 경우
+	if 'youtube.com/embed/' in url:
+		return url
+	
+	# 일반 YouTube URL 변환
+	if 'youtube.com/watch' in url:
+		video_id = url.split('v=')[1].split('&')[0] if 'v=' in url else None
+		if video_id:
+			return f'https://www.youtube.com/embed/{video_id}'
+	
+	# 단축 URL 변환
+	if 'youtu.be/' in url:
+		video_id = url.split('youtu.be/')[1].split('?')[0]
+		return f'https://www.youtube.com/embed/{video_id}'
+	
+	return url
+
 # 데이터베이스 설정
 DATABASE = 'blackeagles.db'
 
@@ -57,6 +81,7 @@ def init_db():
 			name TEXT,
 			email TEXT NOT NULL,
 			message TEXT NOT NULL,
+			type TEXT DEFAULT 'contact',
 			is_read INTEGER DEFAULT 0,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
@@ -110,9 +135,21 @@ def init_db():
 			title_color TEXT DEFAULT '#ffffff',
 			subtitle_color TEXT DEFAULT '#ffffff',
 			description_color TEXT DEFAULT '#ffffff',
+			vertical_position TEXT DEFAULT 'center',
+			padding_top INTEGER DEFAULT 250,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	''')
+	
+	# 기존 테이블에 컬럼 추가 (이미 있으면 무시)
+	try:
+		cursor.execute('ALTER TABLE banner_settings ADD COLUMN vertical_position TEXT DEFAULT "center"')
+	except:
+		pass
+	try:
+		cursor.execute('ALTER TABLE banner_settings ADD COLUMN padding_top INTEGER DEFAULT 250')
+	except:
+		pass
 	
 	# 기본 홈페이지 배너 설정
 	cursor.execute('''
@@ -120,6 +157,145 @@ def init_db():
 		VALUES ('home', '/static/images/hero.jpg', 'Black Eagles', 'Republic Of Korea AirForce', 
 		        '가상블랙이글스는 대한민국 블랙이글스의 다양한 특수비행을 통해 고도의 비행기량을 뽐내는 대한민국 가상 특수비행팀입니다.', 
 		        'more', '#about')
+	''')
+	
+	# 조종사 정보 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS pilots (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			number INTEGER NOT NULL,
+			position TEXT NOT NULL,
+			callsign TEXT NOT NULL,
+			generation TEXT NOT NULL,
+			aircraft TEXT NOT NULL,
+			photo_url TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 조종사 데이터 삽입 (중복 방지)
+	default_pilots = [
+		(1, 'LEADER', 'Bulta', 'VBE 1기', 'F-5', '/static/members/moon.jpeg', 1, 1),
+		(2, 'LEFT WING', 'Fox9', 'VBE 2기', 'F-18', '/static/members/moon.jpeg', 2, 1),
+		(3, 'RIGHT WING', 'Ace', 'VBE 1기', 'F-18', '/static/members/moon.jpeg', 3, 1),
+		(4, 'Slot', 'Moon', 'VBE 1기', 'F-5', '/static/members/moon.jpeg', 4, 1),
+		(5, 'SYNCHRO-1', 'ZeroDistance', 'VBE 1기', 'F-5', '/static/members/moon.jpeg', 5, 1),
+		(6, 'SYNCHRO-2', 'Lewis', 'VBE 1기', 'F-5', '/static/members/Lewis.jpg', 6, 1),
+		(7, 'SOLO-1', 'Sonic', 'VBE 1기', 'F-5', '/static/members/moon.jpeg', 7, 1),
+		(8, 'SOLO-2', 'Strike', 'VBE 1기', 'F-5', '/static/members/moon.jpeg', 8, 1),
+	]
+	
+	# 이미 데이터가 있는지 확인
+	existing_count = cursor.execute('SELECT COUNT(*) FROM pilots').fetchone()[0]
+	
+	# 데이터가 없을 때만 기본 데이터 삽입
+	if existing_count == 0:
+		for pilot in default_pilots:
+			cursor.execute('''
+				INSERT INTO pilots 
+				(number, position, callsign, generation, aircraft, photo_url, order_num, is_active)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			''', pilot)
+	
+	# 홈 콘텐츠 테이블 (유튜브, SNS 피드 등)
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS home_contents (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			content_type TEXT NOT NULL,
+			title TEXT,
+			content_data TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 유튜브 콘텐츠 삽입
+	cursor.execute('''
+		INSERT OR IGNORE INTO home_contents (id, content_type, title, content_data, order_num, is_active)
+		VALUES (1, 'youtube', 'Latest Video', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 1, 1)
+	''')
+	
+	# 팀소개 섹션 테이블 (개요, 항공기 등)
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS about_sections (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			section_type TEXT NOT NULL,
+			title TEXT,
+			content TEXT,
+			image_url TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 개요 섹션 추가
+	cursor.execute('''
+		INSERT OR IGNORE INTO about_sections (id, section_type, title, content, order_num, is_active)
+		VALUES (1, 'overview', '가상 블랙이글스 소개', 
+		'가상 블랙이글스는 DCS World에서 활동하는 대한민국 가상 공군 특수비행팀입니다. 실제 블랙이글스의 정신과 전통을 계승하며, 정교한 편대비행과 에어쇼를 통해 뛰어난 비행실력을 선보입니다.', 
+		0, 1)
+	''')
+	
+	cursor.execute('''
+		INSERT OR IGNORE INTO about_sections (id, section_type, title, content, order_num, is_active)
+		VALUES (2, 'mission', '임무', 
+		'우리의 임무는 대한민국 공군의 우수성을 전 세계에 알리고, 가상 비행 시뮬레이션을 통해 항공에 대한 관심과 이해를 높이는 것입니다. 또한 팀원들의 비행 실력 향상과 팀워크 강화를 목표로 합니다.', 
+		1, 1)
+	''')
+	
+	cursor.execute('''
+		INSERT OR IGNORE INTO about_sections (id, section_type, title, content, order_num, is_active)
+		VALUES (3, 'aircraft_intro', 'T-50B 골든이글', 
+		'T-50B는 대한민국이 자체 개발한 초음속 고등훈련기로, 블랙이글스 팀이 사용하는 항공기입니다. 우수한 기동성과 안정성을 자랑하며, 다양한 편대비행 기동을 수행할 수 있습니다.', 
+		2, 1)
+	''')
+	
+	cursor.execute('''
+		INSERT OR IGNORE INTO about_sections (id, section_type, title, content, image_url, order_num, is_active)
+		VALUES (4, 'aircraft_specs', 'T-50B 제원', 
+		'최대속도: 마하 1.5|전투행동반경: 1,851km|최대이륙중량: 12,300kg|엔진: F404-GE-102 터보팬|승무원: 2명|무장: 20mm 기관포, 공대공 미사일',
+		'/static/images/t50b.jpg', 
+		3, 1)
+	''')
+	
+	cursor.execute('''
+		INSERT OR IGNORE INTO about_sections (id, section_type, title, content, order_num, is_active)
+		VALUES (5, 'aircraft_features', '특징', 
+		'우수한 기동성|높은 안정성|효율적인 연료 소비|조종사 친화적 설계|다목적 운용 가능', 
+		4, 1)
+	''')
+	
+	# 사진 게시판 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS gallery (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			description TEXT,
+			image_url TEXT NOT NULL,
+			upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			is_active INTEGER DEFAULT 1,
+			order_num INTEGER DEFAULT 0,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 샘플 이미지 추가
+	cursor.execute('''
+		INSERT OR IGNORE INTO gallery (id, title, description, image_url, order_num, is_active)
+		VALUES (1, '편대비행 훈련', 'T-50B 4기 편대비행 훈련 모습', '/static/images/formation1.jpg', 1, 1)
+	''')
+	
+	cursor.execute('''
+		INSERT OR IGNORE INTO gallery (id, title, description, image_url, order_num, is_active)
+		VALUES (2, '에어쇼 공연', '2024 서울 에어쇼 블랙이글스 공연', '/static/images/airshow1.jpg', 2, 1)
 	''')
 	
 	conn.commit()
@@ -169,13 +345,13 @@ def send_mail():
 		return redirect(url_for('contact'))
 	
 	try:
-		# 데이터베이스에 문의 내용 저장
+		# 데이터베이스에 문의 내용 저장 (type은 'contact')
 		conn = get_db()
 		cursor = conn.cursor()
 		cursor.execute('''
-			INSERT INTO contact_messages (name, email, message)
-			VALUES (?, ?, ?)
-		''', (name or '익명', email, message))
+			INSERT INTO contact_messages (name, email, message, type)
+			VALUES (?, ?, ?, ?)
+		''', (name or '익명', email, message, 'contact'))
 		conn.commit()
 		conn.close()
 		
@@ -193,13 +369,14 @@ def index():
 	conn = get_db()
 	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('home',)).fetchone()
 	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('home',)).fetchall()
+	home_contents = conn.execute('SELECT * FROM home_contents WHERE is_active = 1 ORDER BY order_num').fetchall()
 	conn.close()
 	
 	# 언어 설정을 템플릿에 전달
 	if lang == 'en':
-		return render_template('index_en.html', banner=banner, sections=sections)
+		return render_template('index_en.html', banner=banner, sections=sections, home_contents=home_contents)
 	else:
-		return render_template('index.html', banner=banner, sections=sections)
+		return render_template('index.html', banner=banner, sections=sections, home_contents=home_contents)
 
 
 @app.route('/notice')
@@ -234,7 +411,13 @@ def about():
 	conn = get_db()
 	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('about',)).fetchone()
 	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('about',)).fetchall()
+	pilots = conn.execute('SELECT * FROM pilots WHERE is_active = 1 ORDER BY order_num').fetchall()
 	conn.close()
+	
+	if lang == 'en':
+		return render_template('about_en.html', banner=banner, sections=sections, pilots=pilots)
+	else:
+		return render_template('about.html', banner=banner, sections=sections, pilots=pilots)
 	
 	if lang == 'en':
 		return render_template('about_en.html', banner=banner, sections=sections)
@@ -254,6 +437,62 @@ def contact():
 		return render_template('contact_en.html', banner=banner, sections=sections)
 	else:
 		return render_template('contact.html', banner=banner, sections=sections)
+
+
+@app.route('/donate')
+def donate():
+	lang = request.args.get('lang', 'ko')
+	conn = get_db()
+	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('donate',)).fetchone()
+	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('donate',)).fetchall()
+	conn.close()
+	
+	if lang == 'en':
+		return render_template('donate_en.html', banner=banner, sections=sections)
+	else:
+		return render_template('donate.html', banner=banner, sections=sections)
+
+
+@app.route('/gallery')
+def gallery():
+	lang = request.args.get('lang', 'ko')
+	conn = get_db()
+	photos = conn.execute('SELECT * FROM gallery WHERE is_active = 1 ORDER BY order_num, upload_date DESC').fetchall()
+	conn.close()
+	
+	if lang == 'en':
+		return render_template('gallery_en.html', photos=photos)
+	else:
+		return render_template('gallery.html', photos=photos)
+
+
+@app.route('/send_donate', methods=['POST'])
+def send_donate():
+	name = request.form.get('name', '').strip()
+	amount = request.form.get('email', '').strip()  # email 필드를 금액으로 사용
+	message = request.form.get('message', '').strip()
+	
+	if not amount or not message:
+		flash('금액과 메시지를 모두 입력해 주세요.', 'error')
+		return redirect(url_for('donate'))
+	
+	try:
+		# 데이터베이스에 후원 문의 저장 (email 필드에 금액 저장, type은 'donate')
+		conn = get_db()
+		conn.execute(
+			'INSERT INTO contact_messages (name, email, message, type) VALUES (?, ?, ?, ?)',
+			(name, amount, message, 'donate')
+		)
+		conn.commit()
+		conn.close()
+		
+		flash('후원 문의가 성공적으로 전송되었습니다! 빠른 시일 내에 연락드리겠습니다.', 'success')
+		return redirect(url_for('donate'))
+	
+	except Exception as e:
+		print(f"후원 문의 전송 오류: {str(e)}")
+		flash('전송 중 오류가 발생했습니다. 다시 시도해 주세요.', 'error')
+		return redirect(url_for('donate'))
 
 
 @app.route('/schedule')
@@ -505,11 +744,19 @@ def admin_schedule_delete(schedule_id):
 @app.route('/admin/messages')
 @login_required
 def admin_messages():
+	message_type = request.args.get('type', 'all')  # all, contact, donate
 	conn = get_db()
-	messages = conn.execute('SELECT * FROM contact_messages ORDER BY created_at DESC').fetchall()
+	
+	if message_type == 'contact':
+		messages = conn.execute("SELECT * FROM contact_messages WHERE type = 'contact' OR type IS NULL ORDER BY created_at DESC").fetchall()
+	elif message_type == 'donate':
+		messages = conn.execute("SELECT * FROM contact_messages WHERE type = 'donate' ORDER BY created_at DESC").fetchall()
+	else:  # all
+		messages = conn.execute('SELECT * FROM contact_messages ORDER BY created_at DESC').fetchall()
+	
 	conn.close()
 	
-	return render_template('admin/messages.html', messages=messages)
+	return render_template('admin/messages.html', messages=messages, current_type=message_type)
 
 
 # 문의 상세보기
@@ -674,19 +921,28 @@ def admin_banner_edit(banner_id):
 		title_color = request.form.get('title_color', '#ffffff').strip()
 		subtitle_color = request.form.get('subtitle_color', '#ffffff').strip()
 		description_color = request.form.get('description_color', '#ffffff').strip()
+		vertical_position = request.form.get('vertical_position', 'center').strip()
+		padding_top = request.form.get('padding_top', '250').strip()
 		
 		if not title:
 			flash('제목을 입력해주세요.', 'error')
 			return redirect(url_for('admin_banner_edit', banner_id=banner_id))
 		
+		try:
+			padding_top_int = int(padding_top)
+		except:
+			padding_top_int = 250
+		
 		conn.execute('''
 			UPDATE banner_settings 
 			SET background_image = ?, title = ?, subtitle = ?, description = ?, 
 			    button_text = ?, button_link = ?, title_font = ?, title_color = ?, 
-			    subtitle_color = ?, description_color = ?, updated_at = CURRENT_TIMESTAMP 
+			    subtitle_color = ?, description_color = ?, vertical_position = ?, 
+			    padding_top = ?, updated_at = CURRENT_TIMESTAMP 
 			WHERE id = ?
 		''', (background_image, title, subtitle, description, button_text, button_link,
-		      title_font, title_color, subtitle_color, description_color, banner_id))
+		      title_font, title_color, subtitle_color, description_color, vertical_position,
+		      padding_top_int, banner_id))
 		conn.commit()
 		conn.close()
 		
@@ -701,6 +957,396 @@ def admin_banner_edit(banner_id):
 		return redirect(url_for('admin_banner'))
 	
 	return render_template('admin/banner_form.html', banner=banner)
+
+
+# 조종사 관리
+@app.route('/admin/pilots')
+@login_required
+def admin_pilots():
+	conn = get_db()
+	pilots = conn.execute('SELECT * FROM pilots ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/pilots.html', pilots=pilots)
+
+
+# 조종사 추가
+@app.route('/admin/pilots/new', methods=['GET', 'POST'])
+@login_required
+def admin_pilot_new():
+	if request.method == 'POST':
+		number = request.form.get('number', '').strip()
+		position = request.form.get('position', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		generation = request.form.get('generation', '').strip()
+		aircraft = request.form.get('aircraft', '').strip()
+		photo_url = request.form.get('photo_url', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([number, position, callsign, generation, aircraft]):
+			flash('모든 필수 항목을 입력해주세요.', 'error')
+			return redirect(url_for('admin_pilot_new'))
+		
+		try:
+			number_int = int(number)
+			order_num_int = int(order_num)
+		except:
+			flash('번호와 정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_pilot_new'))
+		
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO pilots (number, position, callsign, generation, aircraft, photo_url, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		''', (number_int, position, callsign, generation, aircraft, photo_url, order_num_int, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('조종사가 추가되었습니다.', 'success')
+		return redirect(url_for('admin_pilots'))
+	
+	return render_template('admin/pilot_form.html', pilot=None)
+
+
+# 조종사 수정
+@app.route('/admin/pilots/<int:pilot_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_pilot_edit(pilot_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		number = request.form.get('number', '').strip()
+		position = request.form.get('position', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		generation = request.form.get('generation', '').strip()
+		aircraft = request.form.get('aircraft', '').strip()
+		photo_url = request.form.get('photo_url', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([number, position, callsign, generation, aircraft]):
+			flash('모든 필수 항목을 입력해주세요.', 'error')
+			return redirect(url_for('admin_pilot_edit', pilot_id=pilot_id))
+		
+		try:
+			number_int = int(number)
+			order_num_int = int(order_num)
+		except:
+			flash('번호와 정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_pilot_edit', pilot_id=pilot_id))
+		
+		conn.execute('''
+			UPDATE pilots 
+			SET number = ?, position = ?, callsign = ?, generation = ?, aircraft = ?, 
+			    photo_url = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP 
+			WHERE id = ?
+		''', (number_int, position, callsign, generation, aircraft, photo_url, order_num_int, is_active, pilot_id))
+		conn.commit()
+		conn.close()
+		
+		flash('조종사 정보가 수정되었습니다.', 'success')
+		return redirect(url_for('admin_pilots'))
+	
+	pilot = conn.execute('SELECT * FROM pilots WHERE id = ?', (pilot_id,)).fetchone()
+	conn.close()
+	
+	if not pilot:
+		flash('조종사를 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_pilots'))
+	
+	return render_template('admin/pilot_form.html', pilot=pilot)
+
+
+# 조종사 삭제
+@app.route('/admin/pilots/<int:pilot_id>/delete', methods=['POST'])
+@login_required
+def admin_pilot_delete(pilot_id):
+	conn = get_db()
+	conn.execute('DELETE FROM pilots WHERE id = ?', (pilot_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('조종사가 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_pilots'))
+
+
+# 홈 콘텐츠 관리
+@app.route('/admin/home-contents')
+@login_required
+def admin_home_contents():
+	conn = get_db()
+	contents = conn.execute('SELECT * FROM home_contents ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/home_contents.html', contents=contents)
+
+
+# 홈 콘텐츠 추가
+@app.route('/admin/home-contents/new', methods=['GET', 'POST'])
+@login_required
+def admin_home_content_new():
+	if request.method == 'POST':
+		content_type = request.form.get('content_type', '').strip()
+		title = request.form.get('title', '').strip()
+		content_data = request.form.get('content_data', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([content_type, content_data]):
+			flash('콘텐츠 유형과 데이터를 입력해주세요.', 'error')
+			return redirect(url_for('admin_home_content_new'))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			order_num_int = 0
+		
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO home_contents (content_type, title, content_data, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?)
+		''', (content_type, title, content_data, order_num_int, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('홈 콘텐츠가 추가되었습니다.', 'success')
+		return redirect(url_for('admin_home_contents'))
+	
+	return render_template('admin/home_content_form.html', content=None)
+
+
+# 홈 콘텐츠 수정
+@app.route('/admin/home-contents/<int:content_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_home_content_edit(content_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		content_type = request.form.get('content_type', '').strip()
+		title = request.form.get('title', '').strip()
+		content_data = request.form.get('content_data', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([content_type, content_data]):
+			flash('콘텐츠 유형과 데이터를 입력해주세요.', 'error')
+			return redirect(url_for('admin_home_content_edit', content_id=content_id))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			order_num_int = 0
+		
+		conn.execute('''
+			UPDATE home_contents 
+			SET content_type = ?, title = ?, content_data = ?, order_num = ?, 
+			    is_active = ?, updated_at = CURRENT_TIMESTAMP 
+			WHERE id = ?
+		''', (content_type, title, content_data, order_num_int, is_active, content_id))
+		conn.commit()
+		conn.close()
+		
+		flash('홈 콘텐츠가 수정되었습니다.', 'success')
+		return redirect(url_for('admin_home_contents'))
+	
+	content = conn.execute('SELECT * FROM home_contents WHERE id = ?', (content_id,)).fetchone()
+	conn.close()
+	
+	if not content:
+		flash('콘텐츠를 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_home_contents'))
+	
+	return render_template('admin/home_content_form.html', content=content)
+
+
+# 홈 콘텐츠 삭제
+@app.route('/admin/home-contents/<int:content_id>/delete', methods=['POST'])
+@login_required
+def admin_home_content_delete(content_id):
+	conn = get_db()
+	conn.execute('DELETE FROM home_contents WHERE id = ?', (content_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('홈 콘텐츠가 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_home_contents'))
+
+
+# ===== 팀소개 섹션 관리 =====
+@app.route('/admin/about-sections')
+@login_required
+def admin_about_sections():
+	conn = get_db()
+	sections = conn.execute('SELECT * FROM about_sections ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/about_sections.html', sections=sections)
+
+
+@app.route('/admin/about-sections/new', methods=['GET', 'POST'])
+@login_required
+def admin_about_section_new():
+	if request.method == 'POST':
+		section_type = request.form.get('section_type', '').strip()
+		title = request.form.get('title', '').strip()
+		content = request.form.get('content', '').strip()
+		image_url = request.form.get('image_url', '').strip()
+		order_num = int(request.form.get('order_num', 0))
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not section_type or not title:
+			flash('섹션 유형과 제목은 필수입니다.', 'error')
+			return redirect(url_for('admin_about_section_new'))
+		
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO about_sections (section_type, title, content, image_url, order_num, is_active, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		''', (section_type, title, content, image_url, order_num, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('팀소개 섹션이 추가되었습니다.', 'success')
+		return redirect(url_for('admin_about_sections'))
+	
+	return render_template('admin/about_section_form.html', section=None)
+
+
+@app.route('/admin/about-sections/<int:section_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_about_section_edit(section_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		section_type = request.form.get('section_type', '').strip()
+		title = request.form.get('title', '').strip()
+		content = request.form.get('content', '').strip()
+		image_url = request.form.get('image_url', '').strip()
+		order_num = int(request.form.get('order_num', 0))
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not section_type or not title:
+			flash('섹션 유형과 제목은 필수입니다.', 'error')
+			return redirect(url_for('admin_about_section_edit', section_id=section_id))
+		
+		conn.execute('''
+			UPDATE about_sections 
+			SET section_type = ?, title = ?, content = ?, image_url = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		''', (section_type, title, content, image_url, order_num, is_active, section_id))
+		conn.commit()
+		conn.close()
+		
+		flash('팀소개 섹션이 수정되었습니다.', 'success')
+		return redirect(url_for('admin_about_sections'))
+	
+	section = conn.execute('SELECT * FROM about_sections WHERE id = ?', (section_id,)).fetchone()
+	conn.close()
+	
+	if not section:
+		flash('섹션을 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_about_sections'))
+	
+	return render_template('admin/about_section_form.html', section=section)
+
+
+# 사진 게시판 관리 라우트
+@app.route('/admin/gallery')
+@login_required
+def admin_gallery():
+	conn = get_db()
+	photos = conn.execute('SELECT * FROM gallery ORDER BY order_num, upload_date DESC').fetchall()
+	conn.close()
+	return render_template('admin/gallery.html', photos=photos)
+
+
+@app.route('/admin/gallery/new', methods=['GET', 'POST'])
+@login_required
+def admin_gallery_new():
+	if request.method == 'POST':
+		title = request.form.get('title', '').strip()
+		description = request.form.get('description', '').strip()
+		image_url = request.form.get('image_url', '').strip()
+		order_num = request.form.get('order_num', 0)
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not title or not image_url:
+			flash('제목과 이미지 URL은 필수입니다.', 'error')
+			return redirect(url_for('admin_gallery_new'))
+		
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO gallery (title, description, image_url, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?)
+		''', (title, description, image_url, order_num, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('사진이 추가되었습니다.', 'success')
+		return redirect(url_for('admin_gallery'))
+	
+	return render_template('admin/gallery_form.html')
+
+
+@app.route('/admin/gallery/edit/<int:photo_id>', methods=['GET', 'POST'])
+@login_required
+def admin_gallery_edit(photo_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		title = request.form.get('title', '').strip()
+		description = request.form.get('description', '').strip()
+		image_url = request.form.get('image_url', '').strip()
+		order_num = request.form.get('order_num', 0)
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not title or not image_url:
+			flash('제목과 이미지 URL은 필수입니다.', 'error')
+			return redirect(url_for('admin_gallery_edit', photo_id=photo_id))
+		
+		conn.execute('''
+			UPDATE gallery 
+			SET title = ?, description = ?, image_url = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		''', (title, description, image_url, order_num, is_active, photo_id))
+		conn.commit()
+		conn.close()
+		
+		flash('사진이 수정되었습니다.', 'success')
+		return redirect(url_for('admin_gallery'))
+	
+	photo = conn.execute('SELECT * FROM gallery WHERE id = ?', (photo_id,)).fetchone()
+	conn.close()
+	
+	if not photo:
+		flash('사진을 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_gallery'))
+	
+	return render_template('admin/gallery_form.html', photo=photo)
+
+
+@app.route('/admin/gallery/delete/<int:photo_id>', methods=['POST'])
+@login_required
+def admin_gallery_delete(photo_id):
+	conn = get_db()
+	conn.execute('DELETE FROM gallery WHERE id = ?', (photo_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('사진이 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_gallery'))
+
+
+
+
+@app.route('/admin/about-sections/<int:section_id>/delete', methods=['POST'])
+@login_required
+def admin_about_section_delete(section_id):
+	conn = get_db()
+	conn.execute('DELETE FROM about_sections WHERE id = ?', (section_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('팀소개 섹션이 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_about_sections'))
 
 
 if __name__ == '__main__':

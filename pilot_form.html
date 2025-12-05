@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %} - 관리자</title>
+    <link rel="stylesheet" href="/static/style.css?v=915">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f7f7fb; }
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 { color: #007bff; margin-bottom: 1.5rem; }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .required { color: #dc3545; }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .col { flex: 1; }
+        .preview-card {
+            background: white;
+            margin-top: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('admin_pilots') }}" style="color: #007bff; text-decoration: none;">← 조종사 목록으로 돌아가기</a>
+        </div>
+        
+        <div class="form-container">
+            <h2>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %}</h2>
+            
+            <form method="POST">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="number">번호 <span class="required">*</span></label>
+                            <input type="number" id="number" name="number" value="{% if pilot %}{{ pilot.number }}{% endif %}" required min="1" max="99">
+                            <small class="form-text">조종사 번호 (예: 1, 2, 3...)</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="position">포지션 <span class="required">*</span></label>
+                            <input type="text" id="position" name="position" value="{% if pilot %}{{ pilot.position }}{% endif %}" required maxlength="100">
+                            <small class="form-text">예: LEADER, LEFT WING, Slot</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="callsign">콜사인 <span class="required">*</span></label>
+                            <input type="text" id="callsign" name="callsign" value="{% if pilot %}{{ pilot.callsign }}{% endif %}" required maxlength="100">
+                            <small class="form-text">예: Bulta, Fox9, Moon</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="generation">기수 <span class="required">*</span></label>
+                            <input type="text" id="generation" name="generation" value="{% if pilot %}{{ pilot.generation }}{% endif %}" required maxlength="50">
+                            <small class="form-text">예: VBE 1기, VBE 2기</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="aircraft">주 기종 <span class="required">*</span></label>
+                            <input type="text" id="aircraft" name="aircraft" value="{% if pilot %}{{ pilot.aircraft }}{% endif %}" required maxlength="50">
+                            <small class="form-text">예: F-5, F-18</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="photo_url">사진 URL</label>
+                            <input type="text" id="photo_url" name="photo_url" value="{% if pilot %}{{ pilot.photo_url }}{% endif %}" maxlength="500">
+                            <small class="form-text">예: /static/members/pilot1.jpg</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="order_num">정렬 순서</label>
+                            <input type="number" id="order_num" name="order_num" value="{% if pilot %}{{ pilot.order_num }}{% else %}0{% endif %}" min="0">
+                            <small class="form-text">작은 숫자가 먼저 표시됩니다</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>활성 상태</label>
+                            <div class="form-check">
+                                <input type="checkbox" id="is_active" name="is_active" {% if not pilot or pilot.is_active %}checked{% endif %}>
+                                <label for="is_active">활성화</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                    <a href="{{ url_for('admin_pilots') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 취소
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        {% if pilot %}
+        <div class="preview-card">
+            <h3 style="color: #333; margin-bottom: 1rem;">미리보기</h3>
+            <div style="max-width:600px;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
+                <img src="{{ pilot.photo_url if pilot.photo_url else '/static/members/moon.jpeg' }}" alt="{{ pilot.callsign }}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;">
+                <div>
+                    <h4 style="color:#007bff;margin:0 0 0.5rem 0;">#{{ pilot.number }} {{ pilot.callsign }}</h4>
+                    <p style="margin:0.5rem 0;color:#666;">기수 : {{ pilot.generation }}</p>
+                    <p style="margin:0.5rem 0;color:#666;">주 기종 : {{ pilot.aircraft }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

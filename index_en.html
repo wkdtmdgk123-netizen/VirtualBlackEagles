@@ -89,6 +89,41 @@
 	<h2 style="text-align: center; font-size: 2.5rem; letter-spacing: 1.2rem;">Social Now</h2>
 </section>
 
+<!-- Home contents (content added by admin) -->
+{% if home_contents %}
+<section class="container section">
+	<div style="max-width: 1200px; margin: 0 auto;">
+		{% for content in home_contents %}
+			{% if content.content_type == 'youtube' %}
+			<!-- YouTube content -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; font-size: 1.8rem; margin-bottom: 1.5rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+					<iframe 
+						style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+						src="{{ content.content_data | youtube_embed }}" 
+						frameborder="0" 
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+						allowfullscreen>
+					</iframe>
+				</div>
+			</div>
+			{% elif content.content_type == 'sns' %}
+			<!-- SNS content -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; font-size: 1.8rem; margin-bottom: 1.5rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				{{ content.content_data | safe }}
+			</div>
+			{% endif %}
+		{% endfor %}
+	</div>
+</section>
+{% endif %}
+
 <section id="services" class="container section">
 	<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1200px; margin: 2rem auto; align-items: start;">
 		<!-- Facebook section -->

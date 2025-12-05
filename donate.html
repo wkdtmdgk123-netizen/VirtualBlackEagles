@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}후원하기 - Virtual Black Eagles{% endblock %}
+
+{% block banner %}
+<section class="hero banner" style="background-image: url('/static/images/hero.jpg')">
+  <div class="container">
+    <h1 class="banner-title">후원하기</h1>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<main class="container section" style="padding-left: 7rem; text-align: center;">
+      <style>
+        .contact-wrapper {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        
+        .contact-intro {
+          text-align: center;
+          margin-bottom: 4rem;
+        }
+        
+        .contact-intro h2 {
+          font-size: 2.5rem;
+          margin-bottom: 1rem;
+          color: #1a1a1a;
+        }
+        
+        .contact-intro p {
+          font-size: 1.2rem;
+          color: #666;
+          line-height: 1.8;
+        }
+        
+        .contact-content {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 3rem;
+          margin-bottom: 3rem;
+        }
+        
+        .contact-info-card {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          padding: 3rem;
+          border-radius: 20px;
+          color: white;
+          box-shadow: 0 10px 40px rgba(240, 147, 251, 0.3);
+        }
+        
+        .contact-info-card h3 {
+          font-size: 2rem;
+          margin-bottom: 2rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .contact-info-card h3 svg {
+          width: 32px;
+          height: 32px;
+        }
+        
+        .contact-methods {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        
+        .contact-method {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          padding: 1.5rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+        }
+        
+        .contact-method:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: translateX(5px);
+        }
+        
+        .contact-method-icon {
+          width: 48px;
+          height: 48px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        
+        .contact-method-icon svg {
+          width: 24px;
+          height: 24px;
+        }
+        
+        .contact-method-content h4 {
+          font-size: 1.1rem;
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+        }
+        
+        .contact-method-content p {
+          margin: 0;
+          font-size: 1rem;
+          opacity: 0.9;
+        }
+        
+        .contact-form-card {
+          background: white;
+          padding: 3rem;
+          border-radius: 20px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .contact-form-card h3 {
+          font-size: 2rem;
+          margin-bottom: 2rem;
+          color: #1a1a1a;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .contact-form-card h3 svg {
+          width: 32px;
+          height: 32px;
+          color: #f5576c;
+        }
+        
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+          display: block;
+          font-size: 1rem;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 0.5rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+          width: 100%;
+          padding: 1rem;
+          border: 2px solid #e0e0e0;
+          border-radius: 12px;
+          font-size: 1rem;
+          transition: all 0.3s ease;
+          font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #f5576c;
+          box-shadow: 0 0 0 4px rgba(245, 87, 108, 0.1);
+        }
+        
+        .form-group textarea {
+          resize: vertical;
+          min-height: 150px;
+        }
+        
+        .submit-btn {
+          width: 100%;
+          padding: 1.2rem;
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+        }
+        
+        .submit-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+        
+        .submit-btn:active {
+          transform: translateY(0);
+        }
+        
+        .flashes {
+          list-style: none;
+          padding: 0;
+          margin-bottom: 1.5rem;
+        }
+        
+        .flashes li {
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .flashes li.success {
+          background: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
+        
+        .flashes li.error {
+          background: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+          .contact-content {
+            grid-template-columns: 1fr;
+          }
+          
+          .contact-info-card,
+          .contact-form-card {
+            padding: 2rem;
+          }
+          
+          .contact-intro h2 {
+            font-size: 2rem;
+          }
+        }
+      </style>
+      
+      <div class="contact-wrapper">
+        <div class="contact-intro">
+          <h2>후원하기</h2>
+          <p>Virtual Black Eagles의 활동을 후원해 주세요!<br>여러분의 소중한 후원은 팀 운영과 발전에 큰 도움이 됩니다.<br>후원 문의는 아래 양식을 통해 보내주시면 상세히 안내해 드립니다.</p>
+        </div>
+        
+        <div class="contact-content">
+          <!-- 후원 정보 카드 -->
+          <div class="contact-info-card">
+            <h3>
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+              후원 안내
+            </h3>
+            
+            <div class="contact-methods">
+              <div class="contact-method">
+                <div class="contact-method-icon">
+                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                </div>
+                <div class="contact-method-content">
+                  <h4>후원 방법</h4>
+                  <p>계좌이체</p>
+                </div>
+              </div>
+              
+              <div class="contact-method">
+                <div class="contact-method-icon">
+                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <div class="contact-method-content">
+                  <h4>문의</h4>
+                  <p>rr3340@naver.com</p>
+                </div>
+              </div>
+              
+              <div class="contact-method">
+                <div class="contact-method-icon">
+                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <div class="contact-method-content">
+                  <h4>투명한 운영</h4>
+                  <p>모든 후원금은 팀 운영에만 사용됩니다</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 후원 문의 양식 카드 -->
+          <div class="contact-form-card">
+            <h3>
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+              후원 문의하기
+            </h3>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                  <li class="{{ category }}">
+                    {% if category == 'success' %}
+                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    {% else %}
+                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    {% endif %}
+                    {{ message }}
+                  </li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+            
+            <form id="donateForm" method="POST" action="{{ url_for('send_donate') }}">
+              <div class="form-group">
+                <label for="userName">닉네임</label>
+                <input type="text" name="name" id="userName" placeholder="닉네임을 입력해주세요" value="{{ request.form.name|default('') }}" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="donateAmount">후원 희망 금액</label>
+                <input type="text" name="email" id="donateAmount" placeholder="예: 10,000원" value="{{ request.form.email|default('') }}" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="userMsg">응원 메세지 </label>
+                <textarea name="message" id="userMsg" placeholder="후원 방법, 금액 등 문의하실 내용을 입력해주세요" required>{{ request.form.message|default('') }}</textarea>
+              </div>
+              
+              <button type="submit" class="submit-btn">후원 및 응원하기</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+{% endblock %}

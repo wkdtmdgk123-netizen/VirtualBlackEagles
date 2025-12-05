@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀소개 섹션 관리 - 관리자</title>
+    <link rel="stylesheet" href="/static/style.css?v=915">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f7f7fb; }
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #007bff; }
+        .admin-header h2 { color: #007bff; margin: 0; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; text-decoration: none; cursor: pointer; display: inline-block; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-outline-primary { background: white; color: #007bff; border: 1px solid #007bff; }
+        .btn-outline-danger { background: white; color: #dc3545; border: 1px solid #dc3545; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+        th, td { padding: 1rem; text-align: left; }
+        tbody tr { border-bottom: 1px solid #dee2e6; }
+        tbody tr:hover { background: #f8f9fa; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+        .badge.bg-success { background: #28a745; color: white; }
+        .badge.bg-secondary { background: #6c757d; color: white; }
+        .badge.bg-info { background: #17a2b8; color: white; }
+        .alert { padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: #007bff; text-decoration: none;">← 대시보드로 돌아가기</a>
+        </div>
+        
+        <div class="admin-header">
+            <h2>📋 팀소개 섹션 관리</h2>
+            <a href="{{ url_for('admin_about_section_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 섹션 추가
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if sections %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>유형</th>
+                        <th>제목</th>
+                        <th>내용 미리보기</th>
+                        <th>순서</th>
+                        <th>활성</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for section in sections %}
+                    <tr>
+                        <td>
+                            {% if section.section_type == 'overview' %}
+                            <span class="badge bg-info">개요</span>
+                            {% elif section.section_type == 'mission' %}
+                            <span class="badge bg-success">임무</span>
+                            {% elif section.section_type == 'aircraft_intro' %}
+                            <span class="badge bg-warning" style="color:#000">항공기 소개</span>
+                            {% elif section.section_type == 'aircraft_specs' %}
+                            <span class="badge bg-info">항공기 제원</span>
+                            {% elif section.section_type == 'aircraft_features' %}
+                            <span class="badge bg-success">항공기 특징</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ section.section_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ section.title }}</td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ section.content[:100] }}...
+                        </td>
+                        <td>{{ section.order_num }}</td>
+                        <td>
+                            {% if section.is_active %}
+                            <span class="badge bg-success">활성</span>
+                            {% else %}
+                            <span class="badge bg-secondary">비활성</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_about_section_edit', section_id=section.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> 수정
+                            </a>
+                            <form method="POST" action="{{ url_for('admin_about_section_delete', section_id=section.id) }}" 
+                                  style="display:inline;" 
+                                  onsubmit="return confirm('정말 이 섹션을 삭제하시겠습니까?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            등록된 팀소개 섹션이 없습니다. 섹션을 추가해주세요.
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

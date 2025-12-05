@@ -3,7 +3,7 @@
 {% block title %}Virtual Black Eagles - 홈페이지{% endblock %}
 
 {% block banner %}
-<section class="hero banner" style="background-image: url('{{ banner.background_image if banner else '/static/images/hero.jpg' }}'); min-height: 900px;">
+<section class="hero banner" style="background-image: url('{{ banner.background_image if banner else '/static/images/hero.jpg' }}'); min-height: 900px; align-items: {{ banner.vertical_position if banner and banner.vertical_position else 'flex-start' }}; padding-top: {{ banner.padding_top if banner and banner.padding_top else 250 }}px;">
 	<div class="container">
 		{% if banner and banner.subtitle %}
 		<div class="banner-subtitle" style="color: {{ banner.subtitle_color }};">{{ banner.subtitle }}</div>
@@ -89,6 +89,79 @@
 	<h2 data-i18n="about.title" style="text-align: center; font-size: 2.5rem; letter-spacing: 1.2rem;">Social Now</h2>
 </section>
 
+<!-- 홈 콘텐츠 (관리자가 추가한 콘텐츠) -->
+{% if home_contents %}
+<section class="container section">
+	<div style="max-width: 1200px; margin: 0 auto;">
+		{% for content in home_contents %}
+			{% if content.content_type == 'youtube' %}
+			<!-- YouTube 콘텐츠 -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				<div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-bottom: 50.625%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+					<iframe 
+						src="{{ content.content_data|youtube_embed }}" 
+						style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+						frameborder="0" 
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+						allowfullscreen>
+					</iframe>
+				</div>
+			</div>
+			
+			{% elif content.content_type == 'instagram' %}
+			<!-- Instagram 콘텐츠 -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				<div style="max-width: 540px; margin: 0 auto;">
+					<blockquote class="instagram-media" 
+						data-instgrm-permalink="{{ content.content_data }}" 
+						data-instgrm-version="14" 
+						style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px auto; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+					</blockquote>
+				</div>
+			</div>
+			
+			{% elif content.content_type == 'twitter' %}
+			<!-- Twitter 콘텐츠 -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				<div style="max-width: 550px; margin: 0 auto;">
+					<blockquote class="twitter-tweet">
+						<a href="{{ content.content_data }}"></a>
+					</blockquote>
+				</div>
+			</div>
+			
+			{% elif content.content_type == 'tiktok' %}
+			<!-- TikTok 콘텐츠 -->
+			<div style="margin-bottom: 3rem;">
+				{% if content.title %}
+				<h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem; color: #333;">{{ content.title }}</h3>
+				{% endif %}
+				<div style="max-width: 605px; margin: 0 auto; text-align: center;">
+					<blockquote class="tiktok-embed" 
+						cite="{{ content.content_data }}" 
+						data-video-id="{{ content.content_data.split('/')[-1] }}" 
+						style="max-width: 605px; min-width: 325px;">
+						<section>
+							<a target="_blank" href="{{ content.content_data }}">TikTok</a>
+						</section>
+					</blockquote>
+				</div>
+			</div>
+			{% endif %}
+		{% endfor %}
+	</div>
+</section>
+{% endif %}
+
 <section id="services" class="container section">
 	<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1200px; margin: 2rem auto; align-items: start;">
 		<!-- 페이스북 섹션 -->
@@ -161,6 +234,10 @@
 <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v18.0"></script>
 <!-- Instagram Embed -->
 <script async src="https://www.instagram.com/embed.js"></script>
+<!-- Twitter Embed -->
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<!-- TikTok Embed -->
+<script async src="https://www.tiktok.com/embed.js"></script>
 <script>
 // 인스타그램 임베드 강제 리로드
 window.addEventListener('load', function() {

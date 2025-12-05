@@ -86,6 +86,21 @@
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+        .type-badge {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .type-badge-contact {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .type-badge-donate {
+            background: #fce4ec;
+            color: #c2185b;
+        }
     </style>
 </head>
 <body style="background: #f7f7fb;">
@@ -108,11 +123,26 @@
                 <dt>문의 번호</dt>
                 <dd>#{{ message.id }}</dd>
 
+                <dt>구분</dt>
+                <dd>
+                    {% if message.type == 'donate' %}
+                    <span class="type-badge type-badge-donate">💝 후원 문의</span>
+                    {% else %}
+                    <span class="type-badge type-badge-contact">일반 문의</span>
+                    {% endif %}
+                </dd>
+
                 <dt>이름</dt>
                 <dd>{{ message.name }}</dd>
 
-                <dt>이메일</dt>
-                <dd><a href="mailto:{{ message.email }}" style="color: #007bff; text-decoration: none;">{{ message.email }}</a></dd>
+                <dt>{% if message.type == 'donate' %}후원 희망 금액{% else %}이메일{% endif %}</dt>
+                <dd>
+                    {% if message.type == 'donate' %}
+                    {{ message.email }}
+                    {% else %}
+                    <a href="mailto:{{ message.email }}" style="color: #007bff; text-decoration: none;">{{ message.email }}</a>
+                    {% endif %}
+                </dd>
 
                 <dt>작성일시</dt>
                 <dd>{{ message.created_at }}</dd>

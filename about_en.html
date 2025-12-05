@@ -29,9 +29,9 @@
 
         <div style="border-top:2px dotted #ccc;border-bottom:2px dotted #ccc;padding:3rem 0;margin:3rem 0;">
           <h2 style="text-align:center;margin-bottom:2rem;font-size:2rem;">Mission</h2>
-          <div style="display:flex;align-items:center;gap:3rem;max-width:1200px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:3rem;max-width:800px;margin:0 auto;">
             <div style="flex:1;">
-              <img src="/static/images/airshow.jpg" alt="Air Show" style="width:100%;height:auto;border-radius:8px;">
+              <img src="/static/Picture/test.jpg" alt="Air Show" style="width:100%;height:auto;border-radius:8px;">
             </div>
             <div style="flex:1;">
               <p style="font-size:1.1rem;line-height:1.8;">
@@ -60,21 +60,34 @@
           <h3 style="text-align:center;margin-bottom:1rem;">COMMANDER</h3>
           <div class="member-card" style="max-width:400px;margin:0 auto;background:#f8f9fa;padding:2rem;border-radius:8px;text-align:center;">
             <img src="/static/images/default-pilot.jpg" alt="Lt. Col. Nam Ki Chae" style="width:150px;height:150px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">
-            <h4 style="color:#007bff;margin:1rem 0;">Lt. Col. Nam Ki Chae</h4>
-            <p style="margin:0.5rem 0;color:#666;">Class: Air Force Academy 54th</p>
-            <p style="margin:0.5rem 0;color:#666;">Primary Aircraft: F-5</p>
+            <h4 style="color:#007bff;margin:1rem 0; text-align: left;">#1 Bulta</h4>
+            <p style="margin:0.5rem 0;color:#666; text-align: left;">Class: VBE 1st</p>
+            <p style="margin:0.5rem 0;color:#666; text-align: left;">Primary Aircraft: F-5</p>
+            <div style="margin-top:2rem;padding-left:5px;">
+              <img src="/static/members/moon.jpeg" alt="Moon" style="width:150px;height:150px;border-radius:50%;object-fit:cover;margin-bottom:1rem;display:block;">
+              <h4 style="color:#007bff;margin:1rem 0; text-align: left;">#4 Moon</h4>
+              <p style="margin:0.5rem 0;color:#666; text-align: left;">Class: VBE 1st</p>
+              <p style="margin:0.5rem 0;color:#666; text-align: left;">Primary Aircraft: F-5</p>
+            </div>
           </div>
         </div>
 
         <!-- Pilots List -->
         <div id="pilots" class="member-content" style="display:none;">
-          <h3 style="text-align:center;margin-bottom:2rem;">#1 LEADER</h3>
-          <div class="member-card" style="max-width:400px;margin:0 auto 3rem auto;background:#f8f9fa;padding:2rem;border-radius:8px;text-align:center;">
-            <img src="/static/images/default-pilot.jpg" alt="Maj. Lim Suk Hoon" style="width:150px;height:150px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">
-            <h4 style="color:black;margin:1rem 0;">#1 Bulta</h4>
-            <p style="margin:0.5rem 0;color:#666;">Class: VBE 1st</p>
-            <p style="margin:0.5rem 0;color:#666;">Primary Aircraft: F-5</p>
+          {% for pilot in pilots %}
+          <h3 style="text-align:left;margin-bottom:2rem;">#{{ pilot.number }} {{ pilot.position }}</h3>
+          <div class="member-card" style="max-width:600px;margin:0 0 2rem 0;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
+            <img src="{{ pilot.photo_url }}" alt="{{ pilot.callsign }}" style="width:150px;height:150px;object-fit:cover;flex-shrink:0;">
+            <div style="text-align:left;">
+              <h4 style="color:#007bff;margin:0 0 0.5rem 0;">#{{ pilot.number }} {{ pilot.callsign }}</h4>
+              <p style="margin:0.5rem 0;color:#666;">Class: {{ pilot.generation }}</p>
+              <p style="margin:0.5rem 0;color:#666;">Primary Aircraft: {{ pilot.aircraft }}</p>
+            </div>
           </div>
+          {% if not loop.last %}
+          <hr style="border:none;border-top:1px solid #e0e0e0;margin:0 0 2rem 0;">
+          {% endif %}
+          {% endfor %}
         </div>
 
         <!-- Maintenance -->
