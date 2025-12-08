@@ -27,61 +27,45 @@
           capabilities through various special maneuvers with exceptional teamwork.
         </p>
 
-        <div style="border-top:2px dotted #ccc;border-bottom:2px dotted #ccc;padding:3rem 0;margin:3rem 0;">
-          <h2 style="text-align:center;margin-bottom:2rem;font-size:2rem;">Mission</h2>
-          <div style="display:flex;align-items:center;gap:3rem;max-width:800px;margin:0 auto;">
-            <div style="flex:1;">
-              <img src="/static/Picture/test.jpg" alt="Air Show" style="width:100%;height:auto;border-radius:8px;">
+        {% for section in overview_sections %}
+        {% if not loop.first %}
+        <div style="border-top:2px dotted #ccc;margin:3rem 0;"></div>
+        {% endif %}
+        <div style="padding:3rem 0;">
+          <h2 style="text-align:center;margin-bottom:2rem;font-size:2rem;">{{ section['title'] }}</h2>
+          <div style="display:flex;align-items:flex-start;gap:3rem;max-width:1200px;margin:0;">
+            <div style="width:400px;flex-shrink:0;">
+              <img src="{{ section['image_url'] or '/static/Picture/test.jpg' }}" alt="{{ section['title'] }}" style="width:100%;height:auto;border-radius:8px;">
             </div>
             <div style="flex:1;">
               <p style="font-size:1.1rem;line-height:1.8;">
-                The Black Eagles' mission is to inspire national pride by showcasing the Republic of Korea's 
-                air power and military capabilities. Through participation in international air shows and 
-                diplomatic activities, we contribute to enhancing Korea's national prestige, promoting defense 
-                exports, and advancing national interests. We also aim to recruit talented individuals 
-                to further the understanding and development of the Air Force.
+                {{ section['content'] }}
               </p>
             </div>
           </div>
         </div>
+        {% endfor %}
       </section>
       <section id="members" class="about-section tab-content">
         
         <!-- Sub-tab menu -->
         <nav class="member-sub-nav" style="display:flex;gap:2rem;margin-bottom:3rem;justify-content:center;border-bottom:2px solid #e0e0e0;padding-bottom:1rem;">
-          <a href="#" data-member-tab="commander" class="member-tab-link active" style="text-decoration:none;color:#333;padding:0.5rem 1rem;border-bottom:3px solid #007bff;font-weight:bold;">Commander's Message</a>
-          <a href="#" data-member-tab="pilots" class="member-tab-link" style="text-decoration:none;color:#666;padding:0.5rem 1rem;">Pilots</a>
+          <a href="#" data-member-tab="pilots" class="member-tab-link active" style="text-decoration:none;color:#333;padding:0.5rem 1rem;border-bottom:3px solid #007bff;font-weight:bold;">Pilots</a>
+          <a href="#" data-member-tab="commander" class="member-tab-link" style="text-decoration:none;color:#666;padding:0.5rem 1rem;">Commander's Message</a>
           <a href="#" data-member-tab="maintenance" class="member-tab-link" style="text-decoration:none;color:#666;padding:0.5rem 1rem;">Maintenance</a>
           <a href="#" data-member-tab="support" class="member-tab-link" style="text-decoration:none;color:#666;padding:0.5rem 1rem;">Candidates</a>
         </nav>
 
-        <!-- Commander's Message -->
-        <div id="commander" class="member-content active">
-          <h3 style="text-align:center;margin-bottom:1rem;">COMMANDER</h3>
-          <div class="member-card" style="max-width:400px;margin:0 auto;background:#f8f9fa;padding:2rem;border-radius:8px;text-align:center;">
-            <img src="/static/images/default-pilot.jpg" alt="Lt. Col. Nam Ki Chae" style="width:150px;height:150px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">
-            <h4 style="color:#007bff;margin:1rem 0; text-align: left;">#1 Bulta</h4>
-            <p style="margin:0.5rem 0;color:#666; text-align: left;">Class: VBE 1st</p>
-            <p style="margin:0.5rem 0;color:#666; text-align: left;">Primary Aircraft: F-5</p>
-            <div style="margin-top:2rem;padding-left:5px;">
-              <img src="/static/members/moon.jpeg" alt="Moon" style="width:150px;height:150px;border-radius:50%;object-fit:cover;margin-bottom:1rem;display:block;">
-              <h4 style="color:#007bff;margin:1rem 0; text-align: left;">#4 Moon</h4>
-              <p style="margin:0.5rem 0;color:#666; text-align: left;">Class: VBE 1st</p>
-              <p style="margin:0.5rem 0;color:#666; text-align: left;">Primary Aircraft: F-5</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pilots List -->
-        <div id="pilots" class="member-content" style="display:none;">
+        <!-- Pilots -->
+        <div id="pilots" class="member-content active">
           {% for pilot in pilots %}
           <h3 style="text-align:left;margin-bottom:2rem;">#{{ pilot.number }} {{ pilot.position }}</h3>
           <div class="member-card" style="max-width:600px;margin:0 0 2rem 0;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
             <img src="{{ pilot.photo_url }}" alt="{{ pilot.callsign }}" style="width:150px;height:150px;object-fit:cover;flex-shrink:0;">
             <div style="text-align:left;">
               <h4 style="color:#007bff;margin:0 0 0.5rem 0;">#{{ pilot.number }} {{ pilot.callsign }}</h4>
-              <p style="margin:0.5rem 0;color:#666;">Class: {{ pilot.generation }}</p>
-              <p style="margin:0.5rem 0;color:#666;">Primary Aircraft: {{ pilot.aircraft }}</p>
+              <p style="margin:0.5rem 0;color:#666;">Class : {{ pilot.generation }}</p>
+              <p style="margin:0.5rem 0;color:#666;">Aircraft : {{ pilot.aircraft }}</p>
             </div>
           </div>
           {% if not loop.last %}
@@ -90,16 +74,104 @@
           {% endfor %}
         </div>
 
+        <!-- Commander's Message -->
+        <div id="commander" class="member-content">
+          {% for commander in commanders %}
+          <div style="max-width:1200px;margin:0 auto;padding:2rem 0;">
+            <h2 style="text-align:center;font-size:2rem;margin-bottom:3rem;color:#333;">Welcome to the<br>Black Eagles Website</h2>
+            
+            <div style="display:flex;gap:4rem;align-items:flex-start;margin-bottom:3rem;">
+              <!-- Left: Photo -->
+              <div style="flex-shrink:0;">
+                <img src="{{ commander.photo_url }}" alt="{{ commander.callsign }}" 
+                     style="width:400px;height:auto;object-fit:cover;border-radius:8px;">
+              </div>
+              
+              <!-- Right: Message Text -->
+              <div style="flex:1;">
+                <h3 style="font-size:1.3rem;font-weight:bold;margin-bottom:1.5rem;color:#333;"></h3>
+                {% if commander.greeting_text %}
+                  {% set paragraphs = commander.greeting_text.split('\n\n') %}
+                  {% for paragraph in paragraphs %}
+                    <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">{{ paragraph }}</p>
+                  {% endfor %}
+                {% else %}
+                  <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">
+                    I am the Commander of the 53rd Special Flight Squadron.
+                  </p>
+                  <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">
+                    First, I would like to express my deep gratitude to all of you for your unwavering support and encouragement.
+                  </p>
+                  <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">
+                    The Black Eagles have grown significantly thanks to your trust and support. We will continue to advance with renewed dedication and commitment.
+                  </p>
+                  <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">
+                    We understand that the best airshow within the highest safety standards is not achieved overnight, and we will always give our best without a moment's rest.
+                  </p>
+                  <p style="line-height:1.8;color:#333;margin-bottom:1.5rem;text-align:justify;font-size:1.05rem;">
+                    We will strive to become "The Most Magnificent Black Eagles that Illuminate the Republic of Korea" by ensuring the highest safety through thorough adherence to basic principles and procedures, and bringing happiness and joy to you through the best airshow.
+                  </p>
+                {% endif %}
+                
+                <p style="text-align:right;margin-top:2rem;font-weight:bold;color:#333;font-size:1.05rem;"></p>
+                <p style="text-align:right;margin-top:1rem;color:#666;font-size:1rem;">- {{ commander.rank }} {{ commander.callsign }}</p>
+              </div>
+            </div>
+            
+            <div style="border-top:2px solid #e0e0e0;padding-top:0.5rem;">
+              <!-- Bottom line -->
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
         <!-- Maintenance -->
         <div id="maintenance" class="member-content" style="display:none;">
-          <h3 style="text-align:center;">Maintenance</h3>
-          <p style="text-align:center;color:#666;margin-top:2rem;">Maintenance information coming soon.</p>
+          {% if maintenance_crew %}
+          {% for member in maintenance_crew %}
+          <h3 style="text-align:left;margin-bottom:2rem;">🔧 {{ member.name }}</h3>
+          <div class="member-card" style="max-width:600px;margin:0 0 2rem 0;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
+            <img src="{{ member.photo_url }}" alt="{{ member.callsign }}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+            <div style="text-align:left;">
+              <h4 style="color:#007bff;margin:0 0 0.5rem 0;">{{ member.callsign }}</h4>
+              {% if member.role %}
+              <p style="margin:0.5rem 0;color:#666;">Role : {{ member.role }}</p>
+              {% endif %}
+              {% if member.bio %}
+              <p style="margin:0.5rem 0;color:#333;">{{ member.bio }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% if not loop.last %}
+          <hr style="border:none;border-top:1px solid #e0e0e0;margin:0 0 2rem 0;">
+          {% endif %}
+          {% endfor %}
+          {% else %}
+          <p style="text-align:center;color:#666;margin-top:2rem;">No maintenance crew registered.</p>
+          {% endif %}
         </div>
 
         <!-- Candidates -->
         <div id="support" class="member-content" style="display:none;">
-          <h3 style="text-align:center;">Candidates</h3>
-          <p style="text-align:center;color:#666;margin-top:2rem;">Candidate information coming soon.</p>
+          {% if candidates %}
+          {% for candidate in candidates %}
+          <h3 style="text-align:left;margin-bottom:2rem;">🎓 {{ candidate.name }}</h3>
+          <div class="member-card" style="max-width:600px;margin:0 0 2rem 0;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
+            <img src="{{ candidate.photo_url }}" alt="{{ candidate.callsign }}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+            <div style="text-align:left;">
+              <h4 style="color:#007bff;margin:0 0 0.5rem 0;">{{ candidate.callsign }}</h4>
+              {% if candidate.bio %}
+              <p style="margin:0.5rem 0;color:#333;">{{ candidate.bio }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% if not loop.last %}
+          <hr style="border:none;border-top:1px solid #e0e0e0;margin:0 0 2rem 0;">
+          {% endif %}
+          {% endfor %}
+          {% else %}
+          <p style="text-align:center;color:#666;margin-top:2rem;">No candidates registered.</p>
+          {% endif %}
         </div>
       </section>
       <section id="aircraft" class="about-section tab-content">
@@ -471,6 +543,20 @@
         </div>
       </section>
     </main>
+
+<!-- Contact Us + Footer Section -->
+<section class="contact-section" style="background-color: #2D519E; padding: 3rem 0 1rem 0; margin: 0; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;">
+	<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+		<h3 style="color: white; font-size: 2rem; margin-bottom: 1rem;">Contact Us</h3>
+		<p style="color: white; font-size: 1.2rem; margin-bottom: 2rem;">Discord ㅣ Johnson#4553</p>
+	</div>
+</section>
+
+<style>
+.site-footer {
+	display: none;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

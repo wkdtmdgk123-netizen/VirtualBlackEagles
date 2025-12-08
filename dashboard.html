@@ -143,7 +143,25 @@
             </div>
 
             <div class="admin-card">
-                <h2>🎬 홈 콘텐츠 관리</h2>
+                <h2>🔧 정비사 관리</h2>
+                <p>정비사 정보를 추가, 수정, 삭제할 수 있습니다.</p>
+                <a href="{{ url_for('admin_maintenance') }}">관리하기</a>
+            </div>
+
+            <div class="admin-card">
+                <h2>🎓 후보자 관리</h2>
+                <p>후보자 정보를 추가, 수정, 삭제할 수 있습니다.</p>
+                <a href="{{ url_for('admin_candidates') }}">관리하기</a>
+            </div>
+
+            <div class="admin-card">
+                <h2>🎖️ 전대장 인사말 관리</h2>
+                <p>전대장 인사말과 사진을 관리합니다.</p>
+                <a href="{{ url_for('admin_commanders') }}">관리하기</a>
+            </div>
+
+            <div class="admin-card">
+                <h2>�🎬 홈 콘텐츠 관리</h2>
                 <p>홈페이지 유튜브 영상, SNS 피드 등을 관리합니다.</p>
                 <a href="{{ url_for('admin_home_contents') }}">관리하기</a>
             </div>
@@ -158,6 +176,12 @@
                 <h2>📷 사진 게시판 관리</h2>
                 <p>활동 사진을 추가/수정/삭제합니다.</p>
                 <a href="{{ url_for('admin_gallery') }}">관리하기</a>
+            </div>
+
+            <div class="admin-card">
+                <h2>🖼️ 사이트 이미지 관리</h2>
+                <p>홈 배너, 팀소개 페이지 이미지를 변경합니다.</p>
+                <a href="{{ url_for('admin_site_images') }}">관리하기</a>
             </div>
 
             <div class="admin-card">

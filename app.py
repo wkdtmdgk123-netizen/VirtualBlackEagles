@@ -272,6 +272,65 @@ def init_db():
 		4, 1)
 	''')
 	
+	# 전대장 인사말 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS commander_greeting (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			rank TEXT NOT NULL,
+			callsign TEXT NOT NULL,
+			generation TEXT NOT NULL,
+			aircraft TEXT NOT NULL,
+			photo_url TEXT,
+			greeting_text TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 전대장 데이터 삽입 (데이터가 없을 때만)
+	existing_commanders = cursor.execute('SELECT COUNT(*) as count FROM commander_greeting').fetchone()[0]
+	if existing_commanders == 0:
+		cursor.execute('''
+			INSERT INTO commander_greeting (name, rank, callsign, generation, aircraft, photo_url, greeting_text, order_num, is_active)
+			VALUES ('Bulta', 'COMMANDER', '#1 Bulta', 'VBE 1기', 'F-5', '/static/images/default-pilot.jpg', 
+			'안녕하십니까. 가상 블랙이글스 전대장입니다. 우리 팀은 대한민국 공군의 자랑스러운 전통을 계승하며, 최고의 비행 실력을 갖춘 정예 조종사들로 구성되어 있습니다.', 
+			1, 1)
+		''')
+
+	# 정비사 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS maintenance_crew (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			role TEXT,
+			callsign TEXT,
+			photo_url TEXT,
+			bio TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+
+	# 후보자 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS candidates (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			callsign TEXT,
+			photo_url TEXT,
+			bio TEXT,
+			order_num INTEGER DEFAULT 0,
+			is_active INTEGER DEFAULT 1,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+
 	# 사진 게시판 테이블
 	cursor.execute('''
 		CREATE TABLE IF NOT EXISTS gallery (
@@ -297,6 +356,34 @@ def init_db():
 		INSERT OR IGNORE INTO gallery (id, title, description, image_url, order_num, is_active)
 		VALUES (2, '에어쇼 공연', '2024 서울 에어쇼 블랙이글스 공연', '/static/images/airshow1.jpg', 2, 1)
 	''')
+	
+	# 사이트 이미지 관리 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS site_images (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			image_key TEXT UNIQUE NOT NULL,
+			image_name TEXT NOT NULL,
+			image_path TEXT NOT NULL,
+			description TEXT,
+			category TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	# 기본 이미지 키 등록
+	default_images = [
+		('hero_banner', '홈 배너 이미지', '/static/images/hero.jpg', '메인 페이지 상단 배너', 'home'),
+		('about_banner', '팀소개 배너 이미지', '/static/images/hero.jpg', '팀소개 페이지 상단 배너', 'about'),
+		('default_pilot', '기본 파일럿 이미지', '/static/images/default-pilot.jpg', '파일럿 기본 프로필', 'about'),
+		('t50b_main', 'T-50B 메인 이미지', '/static/images/t50b.jpg', '항공기 소개 이미지', 'about'),
+	]
+	
+	for img_key, img_name, img_path, desc, cat in default_images:
+		cursor.execute('''
+			INSERT OR IGNORE INTO site_images (image_key, image_name, image_path, description, category)
+			VALUES (?, ?, ?, ?, ?)
+		''', (img_key, img_name, img_path, desc, cat))
 	
 	conn.commit()
 	conn.close()
@@ -370,13 +457,20 @@ def index():
 	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('home',)).fetchone()
 	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('home',)).fetchall()
 	home_contents = conn.execute('SELECT * FROM home_contents WHERE is_active = 1 ORDER BY order_num').fetchall()
+	
+	# 사이트 이미지 가져오기
+	site_images = {}
+	images = conn.execute('SELECT image_key, image_path FROM site_images').fetchall()
+	for img in images:
+		site_images[img['image_key']] = img['image_path']
+	
 	conn.close()
 	
 	# 언어 설정을 템플릿에 전달
 	if lang == 'en':
-		return render_template('index_en.html', banner=banner, sections=sections, home_contents=home_contents)
+		return render_template('index_en.html', banner=banner, sections=sections, home_contents=home_contents, site_images=site_images)
 	else:
-		return render_template('index.html', banner=banner, sections=sections, home_contents=home_contents)
+		return render_template('index.html', banner=banner, sections=sections, home_contents=home_contents, site_images=site_images)
 
 
 @app.route('/notice')
@@ -412,17 +506,33 @@ def about():
 	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('about',)).fetchone()
 	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('about',)).fetchall()
 	pilots = conn.execute('SELECT * FROM pilots WHERE is_active = 1 ORDER BY order_num').fetchall()
+	
+	# 정비사 가져오기
+	maintenance_crew = conn.execute('SELECT * FROM maintenance_crew WHERE is_active = 1 ORDER BY order_num').fetchall()
+	
+	# 후보자 가져오기
+	candidates = conn.execute('SELECT * FROM candidates WHERE is_active = 1 ORDER BY order_num').fetchall()
+	
+	# 전대장 인사말 가져오기 - 언어별로 가져오기
+	lang_param = 'en' if lang == 'en' else 'ko'
+	commanders = conn.execute('SELECT * FROM commander_greeting WHERE is_active = 1 AND lang = ? ORDER BY order_num', (lang_param,)).fetchall()
+	
+	# 개요 섹션 가져오기 (임무, 선발, 편대) - 언어별로 가져오기
+	lang_param = 'en' if lang == 'en' else 'ko'
+	overview_sections = conn.execute('SELECT * FROM about_sections WHERE section_type IN (?, ?, ?) AND is_active = 1 AND lang = ? ORDER BY order_num', ('mission', 'selection', 'formation', lang_param)).fetchall()
+	
+	# 사이트 이미지 가져오기
+	site_images = {}
+	images = conn.execute('SELECT image_key, image_path FROM site_images').fetchall()
+	for img in images:
+		site_images[img['image_key']] = img['image_path']
+	
 	conn.close()
 	
 	if lang == 'en':
-		return render_template('about_en.html', banner=banner, sections=sections, pilots=pilots)
+		return render_template('about_en.html', banner=banner, sections=sections, pilots=pilots, maintenance_crew=maintenance_crew, candidates=candidates, commanders=commanders, overview_sections=overview_sections, site_images=site_images)
 	else:
-		return render_template('about.html', banner=banner, sections=sections, pilots=pilots)
-	
-	if lang == 'en':
-		return render_template('about_en.html', banner=banner, sections=sections)
-	else:
-		return render_template('about.html', banner=banner, sections=sections)
+		return render_template('about.html', banner=banner, sections=sections, pilots=pilots, maintenance_crew=maintenance_crew, candidates=candidates, commanders=commanders, overview_sections=overview_sections, site_images=site_images)
 
 
 @app.route('/contact')
@@ -979,7 +1089,6 @@ def admin_pilot_new():
 		callsign = request.form.get('callsign', '').strip()
 		generation = request.form.get('generation', '').strip()
 		aircraft = request.form.get('aircraft', '').strip()
-		photo_url = request.form.get('photo_url', '').strip()
 		order_num = request.form.get('order_num', '0').strip()
 		is_active = 1 if request.form.get('is_active') else 0
 		
@@ -993,6 +1102,16 @@ def admin_pilot_new():
 		except:
 			flash('번호와 정렬 순서는 숫자여야 합니다.', 'error')
 			return redirect(url_for('admin_pilot_new'))
+		
+		# 파일 업로드 처리
+		photo_url = '/static/images/default-pilot.jpg'  # 기본 이미지
+		file = request.files.get('photo')
+		if file and file.filename:
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}_{file.filename}"
+			filepath = os.path.join('static', 'members', filename)
+			os.makedirs(os.path.dirname(filepath), exist_ok=True)
+			file.save(filepath)
+			photo_url = f'/static/members/{filename}'
 		
 		conn = get_db()
 		conn.execute('''
@@ -1020,7 +1139,6 @@ def admin_pilot_edit(pilot_id):
 		callsign = request.form.get('callsign', '').strip()
 		generation = request.form.get('generation', '').strip()
 		aircraft = request.form.get('aircraft', '').strip()
-		photo_url = request.form.get('photo_url', '').strip()
 		order_num = request.form.get('order_num', '0').strip()
 		is_active = 1 if request.form.get('is_active') else 0
 		
@@ -1034,6 +1152,19 @@ def admin_pilot_edit(pilot_id):
 		except:
 			flash('번호와 정렬 순서는 숫자여야 합니다.', 'error')
 			return redirect(url_for('admin_pilot_edit', pilot_id=pilot_id))
+		
+		# 기존 사진 URL 가져오기
+		pilot = conn.execute('SELECT photo_url FROM pilots WHERE id = ?', (pilot_id,)).fetchone()
+		photo_url = pilot['photo_url'] if pilot else '/static/images/default-pilot.jpg'
+		
+		# 파일 업로드 처리
+		file = request.files.get('photo')
+		if file and file.filename:
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}_{file.filename}"
+			filepath = os.path.join('static', 'members', filename)
+			os.makedirs(os.path.dirname(filepath), exist_ok=True)
+			file.save(filepath)
+			photo_url = f'/static/members/{filename}'
 		
 		conn.execute('''
 			UPDATE pilots 
@@ -1068,6 +1199,460 @@ def admin_pilot_delete(pilot_id):
 	
 	flash('조종사가 삭제되었습니다.', 'success')
 	return redirect(url_for('admin_pilots'))
+
+
+# ========== 정비사 관리 ==========
+
+# 정비사 목록
+@app.route('/admin/maintenance')
+@login_required
+def admin_maintenance():
+	conn = get_db()
+	crew = conn.execute('SELECT * FROM maintenance_crew ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/maintenance.html', crew=crew)
+
+
+# 정비사 추가
+@app.route('/admin/maintenance/new', methods=['GET', 'POST'])
+@login_required
+def admin_maintenance_new():
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		role = request.form.get('role', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		bio = request.form.get('bio', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, callsign]):
+			flash('이름과 콜사인은 필수 항목입니다.', 'error')
+			return redirect(url_for('admin_maintenance_new'))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_maintenance_new'))
+		
+		# 사진 업로드 처리
+		photo_url = '/static/images/default-crew.jpg'
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일 확장자 추출
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				if file_ext not in ['.jpg', '.jpeg', '.png', '.gif']:
+					flash('이미지 파일만 업로드 가능합니다.', 'error')
+					return redirect(url_for('admin_maintenance_new'))
+				
+				# 안전한 파일명 생성
+				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				filename = f'{timestamp}_crew_{safe_callsign}{file_ext}'
+				
+				# 파일 저장
+				upload_folder = os.path.join(app.root_path, 'static', 'members')
+				os.makedirs(upload_folder, exist_ok=True)
+				file_path = os.path.join(upload_folder, filename)
+				file.save(file_path)
+				
+				photo_url = f'/static/members/{filename}'
+		
+		# 데이터베이스에 저장
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO maintenance_crew (name, role, callsign, photo_url, bio, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		''', (name, role, callsign, photo_url, bio, order_num_int, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('정비사가 추가되었습니다.', 'success')
+		return redirect(url_for('admin_maintenance'))
+	
+	return render_template('admin/maintenance_form.html', crew=None)
+
+
+# 정비사 수정
+@app.route('/admin/maintenance/<int:crew_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_maintenance_edit(crew_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		role = request.form.get('role', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		bio = request.form.get('bio', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, callsign]):
+			flash('이름과 콜사인은 필수 항목입니다.', 'error')
+			return redirect(url_for('admin_maintenance_edit', crew_id=crew_id))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_maintenance_edit', crew_id=crew_id))
+		
+		# 현재 정비사 정보 가져오기
+		current_crew = conn.execute('SELECT photo_url FROM maintenance_crew WHERE id = ?', (crew_id,)).fetchone()
+		photo_url = current_crew['photo_url'] if current_crew else '/static/images/default-crew.jpg'
+		
+		# 사진 업로드 처리
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일 확장자 추출
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				if file_ext not in ['.jpg', '.jpeg', '.png', '.gif']:
+					flash('이미지 파일만 업로드 가능합니다.', 'error')
+					return redirect(url_for('admin_maintenance_edit', crew_id=crew_id))
+				
+				# 안전한 파일명 생성
+				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				filename = f'{timestamp}_crew_{safe_callsign}{file_ext}'
+				
+				# 파일 저장
+				upload_folder = os.path.join(app.root_path, 'static', 'members')
+				os.makedirs(upload_folder, exist_ok=True)
+				file_path = os.path.join(upload_folder, filename)
+				file.save(file_path)
+				
+				photo_url = f'/static/members/{filename}'
+		
+		# 데이터베이스 업데이트
+		conn.execute('''
+			UPDATE maintenance_crew
+			SET name = ?, role = ?, callsign = ?, photo_url = ?, bio = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		''', (name, role, callsign, photo_url, bio, order_num_int, is_active, crew_id))
+		conn.commit()
+		conn.close()
+		
+		flash('정비사 정보가 수정되었습니다.', 'success')
+		return redirect(url_for('admin_maintenance'))
+	
+	crew = conn.execute('SELECT * FROM maintenance_crew WHERE id = ?', (crew_id,)).fetchone()
+	conn.close()
+	
+	if not crew:
+		flash('정비사를 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_maintenance'))
+	
+	return render_template('admin/maintenance_form.html', crew=crew)
+
+
+# 정비사 삭제
+@app.route('/admin/maintenance/<int:crew_id>/delete', methods=['POST'])
+@login_required
+def admin_maintenance_delete(crew_id):
+	conn = get_db()
+	conn.execute('DELETE FROM maintenance_crew WHERE id = ?', (crew_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('정비사가 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_maintenance'))
+
+
+# ========== 후보자 관리 ==========
+
+# 후보자 목록
+@app.route('/admin/candidates')
+@login_required
+def admin_candidates():
+	conn = get_db()
+	candidates = conn.execute('SELECT * FROM candidates ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/candidates.html', candidates=candidates)
+
+
+# 후보자 추가
+@app.route('/admin/candidates/new', methods=['GET', 'POST'])
+@login_required
+def admin_candidate_new():
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		bio = request.form.get('bio', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, callsign]):
+			flash('이름과 콜사인은 필수 항목입니다.', 'error')
+			return redirect(url_for('admin_candidate_new'))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_candidate_new'))
+		
+		# 사진 업로드 처리
+		photo_url = '/static/images/default-pilot.jpg'
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일 확장자 추출
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				if file_ext not in ['.jpg', '.jpeg', '.png', '.gif']:
+					flash('이미지 파일만 업로드 가능합니다.', 'error')
+					return redirect(url_for('admin_candidate_new'))
+				
+				# 안전한 파일명 생성
+				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				filename = f'{timestamp}_candidate_{safe_callsign}{file_ext}'
+				
+				# 파일 저장
+				upload_folder = os.path.join(app.root_path, 'static', 'members')
+				os.makedirs(upload_folder, exist_ok=True)
+				file_path = os.path.join(upload_folder, filename)
+				file.save(file_path)
+				
+				photo_url = f'/static/members/{filename}'
+		
+		# 데이터베이스에 저장
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO candidates (name, callsign, photo_url, bio, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?, ?)
+		''', (name, callsign, photo_url, bio, order_num_int, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('후보자가 추가되었습니다.', 'success')
+		return redirect(url_for('admin_candidates'))
+	
+	return render_template('admin/candidate_form.html', candidate=None)
+
+
+# 후보자 수정
+@app.route('/admin/candidates/<int:candidate_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_candidate_edit(candidate_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		bio = request.form.get('bio', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, callsign]):
+			flash('이름과 콜사인은 필수 항목입니다.', 'error')
+			return redirect(url_for('admin_candidate_edit', candidate_id=candidate_id))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_candidate_edit', candidate_id=candidate_id))
+		
+		# 현재 후보자 정보 가져오기
+		current_candidate = conn.execute('SELECT photo_url FROM candidates WHERE id = ?', (candidate_id,)).fetchone()
+		photo_url = current_candidate['photo_url'] if current_candidate else '/static/images/default-pilot.jpg'
+		
+		# 사진 업로드 처리
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일 확장자 추출
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				if file_ext not in ['.jpg', '.jpeg', '.png', '.gif']:
+					flash('이미지 파일만 업로드 가능합니다.', 'error')
+					return redirect(url_for('admin_candidate_edit', candidate_id=candidate_id))
+				
+				# 안전한 파일명 생성
+				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				filename = f'{timestamp}_candidate_{safe_callsign}{file_ext}'
+				
+				# 파일 저장
+				upload_folder = os.path.join(app.root_path, 'static', 'members')
+				os.makedirs(upload_folder, exist_ok=True)
+				file_path = os.path.join(upload_folder, filename)
+				file.save(file_path)
+				
+				photo_url = f'/static/members/{filename}'
+		
+		# 데이터베이스 업데이트
+		conn.execute('''
+			UPDATE candidates
+			SET name = ?, callsign = ?, photo_url = ?, bio = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		''', (name, callsign, photo_url, bio, order_num_int, is_active, candidate_id))
+		conn.commit()
+		conn.close()
+		
+		flash('후보자 정보가 수정되었습니다.', 'success')
+		return redirect(url_for('admin_candidates'))
+	
+	candidate = conn.execute('SELECT * FROM candidates WHERE id = ?', (candidate_id,)).fetchone()
+	conn.close()
+	
+	if not candidate:
+		flash('후보자를 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_candidates'))
+	
+	return render_template('admin/candidate_form.html', candidate=candidate)
+
+
+# 후보자 삭제
+@app.route('/admin/candidates/<int:candidate_id>/delete', methods=['POST'])
+@login_required
+def admin_candidate_delete(candidate_id):
+	conn = get_db()
+	conn.execute('DELETE FROM candidates WHERE id = ?', (candidate_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('후보자가 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_candidates'))
+
+
+# ========== 전대장 인사말 관리 ==========
+@app.route('/admin/commanders')
+@login_required
+def admin_commanders():
+	conn = get_db()
+	commanders = conn.execute('SELECT * FROM commander_greeting ORDER BY order_num').fetchall()
+	conn.close()
+	return render_template('admin/commanders.html', commanders=commanders)
+
+
+# 전대장 인사말 추가
+@app.route('/admin/commanders/new', methods=['GET', 'POST'])
+@login_required
+def admin_commander_new():
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		rank = request.form.get('rank', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		generation = request.form.get('generation', '').strip()
+		aircraft = request.form.get('aircraft', '').strip()
+		greeting_text = request.form.get('greeting_text', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, rank, callsign, generation, aircraft]):
+			flash('모든 필수 항목을 입력해주세요.', 'error')
+			return redirect(url_for('admin_commander_new'))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_commander_new'))
+		
+		# 파일 업로드 처리
+		photo_url = '/static/images/default-pilot.jpg'  # 기본 이미지
+		file = request.files.get('photo')
+		if file and file.filename:
+			# 안전한 파일명 생성 (공백, 특수문자 제거)
+			safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+			file_ext = os.path.splitext(file.filename)[1]  # 확장자 추출
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}{file_ext}"
+			filepath = os.path.join('static', 'members', filename)
+			os.makedirs(os.path.dirname(filepath), exist_ok=True)
+			file.save(filepath)
+			photo_url = f'/static/members/{filename}'
+		
+		conn = get_db()
+		conn.execute('''
+			INSERT INTO commander_greeting (name, rank, callsign, generation, aircraft, photo_url, greeting_text, order_num, is_active)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		''', (name, rank, callsign, generation, aircraft, photo_url, greeting_text, order_num_int, is_active))
+		conn.commit()
+		conn.close()
+		
+		flash('전대장 인사말이 추가되었습니다.', 'success')
+		return redirect(url_for('admin_commanders'))
+	
+	return render_template('admin/commander_form.html', commander=None)
+
+
+# 전대장 인사말 수정
+@app.route('/admin/commanders/<int:commander_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_commander_edit(commander_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		name = request.form.get('name', '').strip()
+		rank = request.form.get('rank', '').strip()
+		callsign = request.form.get('callsign', '').strip()
+		generation = request.form.get('generation', '').strip()
+		aircraft = request.form.get('aircraft', '').strip()
+		greeting_text = request.form.get('greeting_text', '').strip()
+		order_num = request.form.get('order_num', '0').strip()
+		is_active = 1 if request.form.get('is_active') else 0
+		
+		if not all([name, rank, callsign, generation, aircraft]):
+			flash('모든 필수 항목을 입력해주세요.', 'error')
+			return redirect(url_for('admin_commander_edit', commander_id=commander_id))
+		
+		try:
+			order_num_int = int(order_num)
+		except:
+			flash('정렬 순서는 숫자여야 합니다.', 'error')
+			return redirect(url_for('admin_commander_edit', commander_id=commander_id))
+		
+		# 기존 사진 URL 가져오기
+		commander = conn.execute('SELECT photo_url FROM commander_greeting WHERE id = ?', (commander_id,)).fetchone()
+		photo_url = commander['photo_url'] if commander else '/static/images/default-pilot.jpg'
+		
+		# 파일 업로드 처리
+		file = request.files.get('photo')
+		if file and file.filename:
+			# 안전한 파일명 생성 (공백, 특수문자 제거)
+			safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
+			file_ext = os.path.splitext(file.filename)[1]  # 확장자 추출
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}{file_ext}"
+			filepath = os.path.join('static', 'members', filename)
+			os.makedirs(os.path.dirname(filepath), exist_ok=True)
+			file.save(filepath)
+			photo_url = f'/static/members/{filename}'
+		
+		conn.execute('''
+			UPDATE commander_greeting 
+			SET name = ?, rank = ?, callsign = ?, generation = ?, aircraft = ?, 
+			    photo_url = ?, greeting_text = ?, order_num = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP 
+			WHERE id = ?
+		''', (name, rank, callsign, generation, aircraft, photo_url, greeting_text, order_num_int, is_active, commander_id))
+		conn.commit()
+		conn.close()
+		
+		flash('전대장 인사말이 수정되었습니다.', 'success')
+		return redirect(url_for('admin_commanders'))
+	
+	commander = conn.execute('SELECT * FROM commander_greeting WHERE id = ?', (commander_id,)).fetchone()
+	conn.close()
+	
+	if not commander:
+		flash('전대장 인사말을 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_commanders'))
+	
+	return render_template('admin/commander_form.html', commander=commander)
+
+
+# 전대장 인사말 삭제
+@app.route('/admin/commanders/<int:commander_id>/delete', methods=['POST'])
+@login_required
+def admin_commander_delete(commander_id):
+	conn = get_db()
+	conn.execute('DELETE FROM commander_greeting WHERE id = ?', (commander_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('전대장 인사말이 삭제되었습니다.', 'success')
+	return redirect(url_for('admin_commanders'))
 
 
 # 홈 콘텐츠 관리
@@ -1188,13 +1773,31 @@ def admin_about_section_new():
 		section_type = request.form.get('section_type', '').strip()
 		title = request.form.get('title', '').strip()
 		content = request.form.get('content', '').strip()
-		image_url = request.form.get('image_url', '').strip()
 		order_num = int(request.form.get('order_num', 0))
 		is_active = 1 if request.form.get('is_active') else 0
 		
 		if not section_type or not title:
 			flash('섹션 유형과 제목은 필수입니다.', 'error')
 			return redirect(url_for('admin_about_section_new'))
+		
+		# 사진 업로드 처리
+		image_url = ''
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일명 생성 (타임스탬프_섹션타입)
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				safe_section = ''.join(c for c in section_type if c.isalnum() or c in ('-', '_'))
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				filename = f"{timestamp}_section_{safe_section}{file_ext}"
+				
+				# 저장 경로
+				upload_folder = os.path.join(app.static_folder, 'Picture')
+				os.makedirs(upload_folder, exist_ok=True)
+				filepath = os.path.join(upload_folder, filename)
+				
+				file.save(filepath)
+				image_url = f'/static/Picture/{filename}'
 		
 		conn = get_db()
 		conn.execute('''
@@ -1219,13 +1822,34 @@ def admin_about_section_edit(section_id):
 		section_type = request.form.get('section_type', '').strip()
 		title = request.form.get('title', '').strip()
 		content = request.form.get('content', '').strip()
-		image_url = request.form.get('image_url', '').strip()
 		order_num = int(request.form.get('order_num', 0))
 		is_active = 1 if request.form.get('is_active') else 0
 		
 		if not section_type or not title:
 			flash('섹션 유형과 제목은 필수입니다.', 'error')
 			return redirect(url_for('admin_about_section_edit', section_id=section_id))
+		
+		# 기존 섹션 정보 가져오기
+		section = conn.execute('SELECT * FROM about_sections WHERE id = ?', (section_id,)).fetchone()
+		image_url = section['image_url'] if section else ''
+		
+		# 사진 업로드 처리
+		if 'photo' in request.files:
+			file = request.files['photo']
+			if file and file.filename:
+				# 파일명 생성 (타임스탬프_섹션타입)
+				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+				safe_section = ''.join(c for c in section_type if c.isalnum() or c in ('-', '_'))
+				file_ext = os.path.splitext(file.filename)[1].lower()
+				filename = f"{timestamp}_section_{safe_section}{file_ext}"
+				
+				# 저장 경로
+				upload_folder = os.path.join(app.static_folder, 'Picture')
+				os.makedirs(upload_folder, exist_ok=True)
+				filepath = os.path.join(upload_folder, filename)
+				
+				file.save(filepath)
+				image_url = f'/static/Picture/{filename}'
 		
 		conn.execute('''
 			UPDATE about_sections 
@@ -1349,6 +1973,59 @@ def admin_about_section_delete(section_id):
 	return redirect(url_for('admin_about_sections'))
 
 
+# 사이트 이미지 관리 - 목록
+@app.route('/admin/site-images')
+@login_required
+def admin_site_images():
+	conn = get_db()
+	images = conn.execute('SELECT * FROM site_images ORDER BY category, image_key').fetchall()
+	conn.close()
+	return render_template('admin/site_images.html', images=images)
+
+
+# 사이트 이미지 수정
+@app.route('/admin/site-images/<int:image_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_site_image_edit(image_id):
+	conn = get_db()
+	
+	if request.method == 'POST':
+		file = request.files.get('image')
+		
+		if file and file.filename:
+			# 파일 저장
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+			filepath = os.path.join('static', 'images', filename)
+			os.makedirs(os.path.dirname(filepath), exist_ok=True)
+			file.save(filepath)
+			
+			image_path = f'/static/images/{filename}'
+			
+			# 데이터베이스 업데이트
+			conn.execute('''
+				UPDATE site_images 
+				SET image_path = ?, updated_at = CURRENT_TIMESTAMP
+				WHERE id = ?
+			''', (image_path, image_id))
+			conn.commit()
+			
+			flash('이미지가 업데이트되었습니다.', 'success')
+		else:
+			flash('이미지 파일을 선택해주세요.', 'error')
+		
+		conn.close()
+		return redirect(url_for('admin_site_images'))
+	
+	image = conn.execute('SELECT * FROM site_images WHERE id = ?', (image_id,)).fetchone()
+	conn.close()
+	
+	if not image:
+		flash('이미지를 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_site_images'))
+	
+	return render_template('admin/site_image_form.html', image=image)
+
+
 if __name__ == '__main__':
 	# 데이터베이스 초기화
 	init_db()
@@ -1359,4 +2036,5 @@ if __name__ == '__main__':
 	# Run the dev server without the auto-reloader (single process) to avoid issues
 	# when starting the app detached in this environment.
 	app.run(host=host, port=port, debug=False, use_reloader=False)
+
 

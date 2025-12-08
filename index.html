@@ -223,10 +223,24 @@
 	</div>
 </section>
 
-<section id="contact" class="container section contact-section">
-	<h3 data-i18n="contact.title">Contact Us</h3>
-	<p data-i18n="contact.text">Discord ㅣ Johnson#4553</p>
+<section id="contact" class="contact-section" style="background-color: #2D519E; padding: 3rem 0 1rem 0; margin: 0; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;">
+	<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+		<h3 data-i18n="contact.title" style="color: white; font-size: 2rem; margin-bottom: 1rem;">Contact Us</h3>
+		<p data-i18n="contact.text" style="color: white; font-size: 1.2rem; margin-bottom: 2rem;">Discord ㅣ Johnson#4553</p>
+		
+		<!-- Footer 내용을 여기에 포함 -->
+		<div style="border-top: 1px solid rgba(255,255,255,0.3); padding-top: 2rem; margin-top: 2rem; text-align: center;">
+			<p style="color: white; font-size: 1rem; margin: 0;">© 2025 Virtual Black Eagles</p>
+		</div>
+	</div>
 </section>
+
+<!-- footer 오버라이드 (빈 footer로 대체) -->
+<style>
+.site-footer {
+	display: none;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

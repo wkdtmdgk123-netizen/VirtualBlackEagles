@@ -35,13 +35,15 @@
         </div>
 
         <div class="form-container">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="section_type">섹션 유형 <span style="color: red;">*</span></label>
                     <select id="section_type" name="section_type" required>
                         <option value="">-- 선택하세요 --</option>
                         <option value="overview" {% if section and section.section_type == 'overview' %}selected{% endif %}>개요</option>
                         <option value="mission" {% if section and section.section_type == 'mission' %}selected{% endif %}>임무</option>
+                        <option value="selection" {% if section and section.section_type == 'selection' %}selected{% endif %}>선발</option>
+                        <option value="formation" {% if section and section.section_type == 'formation' %}selected{% endif %}>편대</option>
                         <option value="aircraft_intro" {% if section and section.section_type == 'aircraft_intro' %}selected{% endif %}>항공기 소개</option>
                         <option value="aircraft_specs" {% if section and section.section_type == 'aircraft_specs' %}selected{% endif %}>항공기 제원</option>
                         <option value="aircraft_features" {% if section and section.section_type == 'aircraft_features' %}selected{% endif %}>항공기 특징</option>
@@ -53,23 +55,27 @@
                     <label for="title">제목 <span style="color: red;">*</span></label>
                     <input type="text" id="title" name="title" 
                            value="{{ section.title if section else '' }}"
-                           placeholder="예: T-50B 골든이글"
+                           placeholder="예: 임무"
                            required>
                 </div>
 
                 <div class="form-group">
                     <label for="content">내용</label>
                     <textarea id="content" name="content" 
-                              placeholder="섹션 내용을 입력하세요. 제원이나 특징의 경우 | 로 구분하여 입력하세요.">{{ section.content if section else '' }}</textarea>
-                    <small>제원/특징: 항목을 | 로 구분 (예: 최대속도: 마하 1.5|엔진: F404)</small>
+                              placeholder="섹션 내용을 입력하세요.">{{ section.content if section else '' }}</textarea>
+                    <small>개요 섹션의 상세 설명을 입력하세요</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="image_url">이미지 URL</label>
-                    <input type="text" id="image_url" name="image_url" 
-                           value="{{ section.image_url if section else '' }}"
-                           placeholder="/static/images/t50b.jpg">
-                    <small>선택사항: 섹션에 표시할 이미지 경로</small>
+                    <label for="photo">이미지 첨부</label>
+                    {% if section and section.image_url %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ section.image_url }}" alt="현재 이미지" style="max-width: 300px; height: auto; border: 1px solid #ddd; padding: 5px;">
+                        <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">현재 이미지: {{ section.image_url }}</p>
+                    </div>
+                    {% endif %}
+                    <input type="file" id="photo" name="photo" accept="image/*">
+                    <small>새 이미지를 선택하면 기존 이미지가 교체됩니다</small>
                 </div>
 
                 <div class="form-group">

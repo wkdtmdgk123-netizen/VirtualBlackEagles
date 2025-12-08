@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %} - 관리자</title>
+    <title>{% if crew %}정비사 수정{% else %}정비사 추가{% endif %} - 관리자</title>
     <link rel="stylesheet" href="/static/style.css?v=915">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -31,12 +31,18 @@
         }
         .required { color: #dc3545; }
         input[type="text"],
-        input[type="number"] {
+        input[type="number"],
+        textarea {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ced4da;
             border-radius: 4px;
             font-size: 1rem;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         .form-text {
             font-size: 0.875rem;
@@ -66,13 +72,6 @@
             margin-bottom: 1rem;
         }
         .col { flex: 1; }
-        .preview-card {
-            background: white;
-            margin-top: 2rem;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
         .file-upload-wrapper {
             position: relative;
             margin-bottom: 1rem;
@@ -131,134 +130,108 @@
 <body>
     <div class="admin-container">
         <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('admin_pilots') }}" style="color: #007bff; text-decoration: none;">← 조종사 목록으로 돌아가기</a>
+            <a href="{{ url_for('admin_maintenance') }}" style="color: #007bff; text-decoration: none;">← 정비사 목록으로 돌아가기</a>
         </div>
         
         <div class="form-container">
-            <h2>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %}</h2>
+            <h2>{% if crew %}정비사 수정{% else %}정비사 추가{% endif %}</h2>
             
             <form method="POST" enctype="multipart/form-data">
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label for="number">번호 <span class="required">*</span></label>
-                            <input type="number" id="number" name="number" value="{% if pilot %}{{ pilot.number }}{% endif %}" required min="1" max="99">
-                            <small class="form-text">조종사 번호 (예: 1, 2, 3...)</small>
+                            <label for="name">이름 <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" value="{% if crew %}{{ crew.name }}{% endif %}" required>
                         </div>
                     </div>
                     <div class="col">
                         <div class="form-group">
-                            <label for="position">포지션 <span class="required">*</span></label>
-                            <input type="text" id="position" name="position" value="{% if pilot %}{{ pilot.position }}{% endif %}" required maxlength="100">
-                            <small class="form-text">예: LEADER, LEFT WING, Slot</small>
+                            <label for="role">역할</label>
+                            <input type="text" id="role" name="role" value="{% if crew %}{{ crew.role }}{% endif %}" placeholder="예: 정비팀장, 정비사">
+                            <small class="form-text">정비사의 역할 (선택사항)</small>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
                             <label for="callsign">콜사인 <span class="required">*</span></label>
-                            <input type="text" id="callsign" name="callsign" value="{% if pilot %}{{ pilot.callsign }}{% endif %}" required maxlength="100">
-                            <small class="form-text">예: Bulta, Fox9, Moon</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="generation">기수 <span class="required">*</span></label>
-                            <input type="text" id="generation" name="generation" value="{% if pilot %}{{ pilot.generation }}{% endif %}" required maxlength="50">
-                            <small class="form-text">예: VBE 1기, VBE 2기</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="aircraft">주 기종 <span class="required">*</span></label>
-                            <input type="text" id="aircraft" name="aircraft" value="{% if pilot %}{{ pilot.aircraft }}{% endif %}" required maxlength="50">
-                            <small class="form-text">예: F-5, F-18</small>
+                            <input type="text" id="callsign" name="callsign" value="{% if crew %}{{ crew.callsign }}{% endif %}" required>
                         </div>
                     </div>
                     <div class="col">
                         <div class="form-group">
                             <label for="order_num">정렬 순서</label>
-                            <input type="number" id="order_num" name="order_num" value="{% if pilot %}{{ pilot.order_num }}{% else %}0{% endif %}" min="0">
-                            <small class="form-text">작은 숫자가 먼저 표시됩니다</small>
+                            <input type="number" id="order_num" name="order_num" value="{% if crew %}{{ crew.order_num }}{% else %}0{% endif %}">
+                            <small class="form-text">낮은 숫자가 먼저 표시됩니다</small>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="photo">프로필 사진</label>
+                    <label for="bio">소개</label>
+                    <textarea id="bio" name="bio" rows="4" placeholder="정비사 소개 내용을 입력하세요">{% if crew %}{{ crew.bio }}{% endif %}</textarea>
+                    <small class="form-text">정비사의 간단한 소개 (선택사항)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 업로드</label>
                     <div class="file-upload-wrapper">
-                        <input type="file" id="photo" name="photo" class="file-upload-input" accept="image/*">
                         <label for="photo" class="file-upload-label">
                             <div class="file-upload-content">
-                                <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                                <div>클릭하여 이미지 선택</div>
-                                <small class="form-text">JPG, PNG, GIF 형식 지원</small>
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <p><strong>클릭하여 사진 선택</strong></p>
+                                <p class="form-text">JPG, JPEG, PNG, GIF 파일만 업로드 가능합니다</p>
                             </div>
                         </label>
+                        <input type="file" id="photo" name="photo" class="file-upload-input" accept="image/*">
                     </div>
-                    {% if pilot and pilot.photo_url %}
+                    
+                    {% if crew and crew.photo_url %}
                     <div class="current-photo">
-                        <small class="form-text"><strong>현재 사진:</strong></small>
-                        <img src="{{ pilot.photo_url }}" alt="{{ pilot.callsign }}">
+                        <p><strong>현재 사진:</strong></p>
+                        <img src="{{ crew.photo_url }}" alt="{{ crew.name }}">
                     </div>
                     {% endif %}
+                    
                     <div class="photo-preview" id="photoPreview">
-                        <small class="form-text"><strong>새 사진 미리보기:</strong></small>
+                        <p><strong>새 사진 미리보기:</strong></p>
                         <img id="previewImage" src="" alt="미리보기">
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <label>활성 상태</label>
                     <div class="form-check">
-                        <input type="checkbox" id="is_active" name="is_active" {% if not pilot or pilot.is_active %}checked{% endif %}>
-                        <label for="is_active">활성화</label>
+                        <input type="checkbox" id="is_active" name="is_active" {% if not crew or crew.is_active %}checked{% endif %}>
+                        <label for="is_active" style="margin-bottom: 0;">활성화</label>
                     </div>
+                    <small class="form-text">비활성화하면 웹사이트에 표시되지 않습니다</small>
                 </div>
-                
+
                 <div style="margin-top: 2rem;">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 저장
+                        <i class="fas fa-save"></i> {% if crew %}수정 완료{% else %}추가하기{% endif %}
                     </button>
-                    <a href="{{ url_for('admin_pilots') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('admin_maintenance') }}" class="btn btn-secondary">
                         <i class="fas fa-times"></i> 취소
                     </a>
                 </div>
             </form>
         </div>
-        
-        {% if pilot %}
-        <div class="preview-card">
-            <h3 style="color: #333; margin-bottom: 1rem;">미리보기</h3>
-            <div style="max-width:600px;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
-                <img src="{{ pilot.photo_url if pilot.photo_url else '/static/members/moon.jpeg' }}" alt="{{ pilot.callsign }}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;">
-                <div>
-                    <h4 style="color:#007bff;margin:0 0 0.5rem 0;">#{{ pilot.number }} {{ pilot.callsign }}</h4>
-                    <p style="margin:0.5rem 0;color:#666;">기수 : {{ pilot.generation }}</p>
-                    <p style="margin:0.5rem 0;color:#666;">주 기종 : {{ pilot.aircraft }}</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     <script>
-        const photoInput = document.getElementById('photo');
-        const photoPreview = document.getElementById('photoPreview');
-        const previewImage = document.getElementById('previewImage');
-
-        photoInput.addEventListener('change', function(e) {
+        // 파일 선택시 미리보기 표시
+        document.getElementById('photo').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    photoPreview.style.display = 'block';
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('photoPreview').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
