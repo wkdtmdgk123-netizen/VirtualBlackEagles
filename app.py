@@ -227,6 +227,8 @@ def init_db():
 			section_type TEXT NOT NULL,
 			title TEXT,
 			content TEXT,
+			-- 언어 구분 (ko / en). 기존 DB에는 없을 수 있으므로 아래에서 ALTER TABLE 로 추가
+			-- lang TEXT NOT NULL DEFAULT 'ko',
 			image_url TEXT,
 			order_num INTEGER DEFAULT 0,
 			is_active INTEGER DEFAULT 1,
@@ -234,6 +236,13 @@ def init_db():
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	''')
+	
+	# about_sections 테이블에 lang 컬럼이 없을 수 있으므로 동적으로 추가
+	try:
+		cursor.execute('ALTER TABLE about_sections ADD COLUMN lang TEXT DEFAULT "ko"')
+	except Exception:
+		# 이미 컬럼이 있을 경우 에러를 무시
+		pass
 	
 	# 기본 개요 섹션 추가
 	cursor.execute('''
@@ -277,6 +286,8 @@ def init_db():
 		CREATE TABLE IF NOT EXISTS commander_greeting (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
+			-- 언어 구분 (ko / en). 기존 DB에는 없을 수 있으므로 아래에서 ALTER TABLE 로 추가
+			-- lang TEXT NOT NULL DEFAULT 'ko',
 			rank TEXT NOT NULL,
 			callsign TEXT NOT NULL,
 			generation TEXT NOT NULL,
@@ -289,6 +300,13 @@ def init_db():
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	''')
+	
+	# commander_greeting 테이블에 lang 컬럼이 없을 수 있으므로 동적으로 추가
+	try:
+		cursor.execute('ALTER TABLE commander_greeting ADD COLUMN lang TEXT DEFAULT "ko"')
+	except Exception:
+		# 이미 컬럼이 있을 경우 에러를 무시
+		pass
 	
 	# 기본 전대장 데이터 삽입 (데이터가 없을 때만)
 	existing_commanders = cursor.execute('SELECT COUNT(*) as count FROM commander_greeting').fetchone()[0]
@@ -349,12 +367,12 @@ def init_db():
 	# 기본 샘플 이미지 추가
 	cursor.execute('''
 		INSERT OR IGNORE INTO gallery (id, title, description, image_url, order_num, is_active)
-		VALUES (1, '편대비행 훈련', 'T-50B 4기 편대비행 훈련 모습', '/static/images/formation1.jpg', 1, 1)
+		VALUES (1, '편대비행 훈련', 'T-50B 4기 편대비행 훈련 모습', '/static/Picture/20251207_173919_section_formation.png', 1, 1)
 	''')
 	
 	cursor.execute('''
 		INSERT OR IGNORE INTO gallery (id, title, description, image_url, order_num, is_active)
-		VALUES (2, '에어쇼 공연', '2024 서울 에어쇼 블랙이글스 공연', '/static/images/airshow1.jpg', 2, 1)
+		VALUES (2, '에어쇼 공연', '2024 서울 에어쇼 블랙이글스 공연', '/static/Picture/Formation.png', 2, 1)
 	''')
 	
 	# 사이트 이미지 관리 테이블
@@ -375,8 +393,8 @@ def init_db():
 	default_images = [
 		('hero_banner', '홈 배너 이미지', '/static/images/hero.jpg', '메인 페이지 상단 배너', 'home'),
 		('about_banner', '팀소개 배너 이미지', '/static/images/hero.jpg', '팀소개 페이지 상단 배너', 'about'),
-		('default_pilot', '기본 파일럿 이미지', '/static/images/default-pilot.jpg', '파일럿 기본 프로필', 'about'),
-		('t50b_main', 'T-50B 메인 이미지', '/static/images/t50b.jpg', '항공기 소개 이미지', 'about'),
+		('default_pilot', '기본 파일럿 이미지', '/static/members/moon.jpeg', '파일럿 기본 프로필', 'about'),
+		('t50b_main', 'T-50B 메인 이미지', '/static/Picture/Formation.png', '항공기 소개 이미지', 'about'),
 	]
 	
 	for img_key, img_name, img_path, desc, cat in default_images:
@@ -385,12 +403,58 @@ def init_db():
 			VALUES (?, ?, ?, ?, ?)
 		''', (img_key, img_name, img_path, desc, cat))
 	
+	# 기존 DB에 이미 t50b_main 이 있다면 경로를 실제 존재하는 이미지로 교체
+	try:
+		cursor.execute('''
+			UPDATE site_images
+			SET image_path = '/static/Picture/Formation.png'
+			WHERE image_key = 't50b_main'
+		''')
+	except Exception:
+		pass
+	
+	# 실시간 채팅 테이블
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS chat_sessions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			session_id TEXT UNIQUE NOT NULL,
+			user_name TEXT,
+			user_email TEXT,
+			status TEXT DEFAULT 'active',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	''')
+	
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS chat_messages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			session_id TEXT NOT NULL,
+			sender_type TEXT NOT NULL,
+			sender_name TEXT,
+			message TEXT NOT NULL,
+			is_read INTEGER DEFAULT 0,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id)
+		)
+	''')
+	
 	conn.commit()
 	conn.close()
 
 # 관리자 계정 (실제 운영시에는 데이터베이스나 환경변수 사용 권장)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'blackeagles2025')
+
+# 로그인 체크 데코레이터
+def login_required(f):
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		if 'logged_in' not in session:
+			flash('로그인이 필요합니다.', 'error')
+			return redirect(url_for('admin_login'))
+		return f(*args, **kwargs)
+	return decorated_function
 
 # Flask-Mail configuration (set these as environment variables for security)
 # Example for Naver SMTP:
@@ -616,11 +680,6 @@ def schedule():
 		return render_template('schedule_en.html', schedules=schedules)
 	else:
 		return render_template('schedule.html', schedules=schedules)
-def schedule():
-	conn = get_db()
-	schedules = conn.execute('SELECT * FROM schedules ORDER BY event_date DESC').fetchall()
-	conn.close()
-	return render_template('schedule.html', schedules=schedules)
 
 
 @app.route('/schedule/<int:schedule_id>')
@@ -634,17 +693,6 @@ def schedule_detail(schedule_id):
 		return redirect(url_for('schedule'))
 	
 	return render_template('schedule_detail.html', schedule=schedule)
-
-
-# 로그인 체크 데코레이터
-def login_required(f):
-	@wraps(f)
-	def decorated_function(*args, **kwargs):
-		if 'logged_in' not in session:
-			flash('로그인이 필요합니다.', 'error')
-			return redirect(url_for('admin_login'))
-		return f(*args, **kwargs)
-	return decorated_function
 
 
 # 관리자 로그인 페이지
@@ -682,9 +730,26 @@ def admin_dashboard():
 	unread_count = conn.execute('SELECT COUNT(*) as count FROM contact_messages WHERE is_read = 0').fetchone()['count']
 	# 최근 문의 5개 가져오기
 	recent_messages = conn.execute('SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 5').fetchall()
+	
+	# 읽지 않은 채팅 메시지 수 가져오기
+	unread_chat_count = conn.execute('''
+		SELECT COUNT(*) as count FROM chat_messages 
+		WHERE sender_type = 'user' AND is_read = 0
+	''').fetchone()['count']
+	
+	# 활성 채팅 세션 수
+	active_chat_sessions = conn.execute('''
+		SELECT COUNT(*) as count FROM chat_sessions WHERE status = 'active'
+	''').fetchone()['count']
+	
 	conn.close()
 	
-	return render_template('admin/dashboard.html', unread_count=unread_count, recent_messages=recent_messages)
+	return render_template('admin/dashboard.html', 
+		unread_count=unread_count, 
+		recent_messages=recent_messages,
+		unread_chat_count=unread_chat_count,
+		active_chat_sessions=active_chat_sessions
+	)
 
 
 # 공지사항 관리 - 목록
@@ -2026,10 +2091,232 @@ def admin_site_image_edit(image_id):
 	return render_template('admin/site_image_form.html', image=image)
 
 
-if __name__ == '__main__':
-	# 데이터베이스 초기화
-	init_db()
+# ============================================
+# 실시간 채팅 관련 라우트
+# ============================================
+
+# 사용자: 채팅 세션 시작
+@app.route('/chat/start', methods=['POST'])
+def chat_start():
+	"""새 채팅 세션 시작"""
+	import uuid
 	
+	session_id = str(uuid.uuid4())
+	user_name = request.json.get('name', '방문자')
+	user_email = request.json.get('email', '')
+	
+	conn = get_db()
+	conn.execute('''
+		INSERT INTO chat_sessions (session_id, user_name, user_email, status)
+		VALUES (?, ?, ?, 'active')
+	''', (session_id, user_name, user_email))
+	conn.commit()
+	conn.close()
+	
+	return {'success': True, 'session_id': session_id}
+
+
+# 사용자: 메시지 전송
+@app.route('/chat/send', methods=['POST'])
+def chat_send():
+	"""채팅 메시지 전송"""
+	data = request.json
+	session_id = data.get('session_id')
+	message = data.get('message', '').strip()
+	sender_type = data.get('sender_type', 'user')
+	sender_name = data.get('sender_name', '방문자')
+	
+	if not session_id or not message:
+		return {'success': False, 'error': '세션 ID와 메시지가 필요합니다.'}, 400
+	
+	conn = get_db()
+	conn.execute('''
+		INSERT INTO chat_messages (session_id, sender_type, sender_name, message)
+		VALUES (?, ?, ?, ?)
+	''', (session_id, sender_type, sender_name, message))
+	
+	# 세션 업데이트 시간 갱신
+	conn.execute('''
+		UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
+	''', (session_id,))
+	
+	conn.commit()
+	conn.close()
+	
+	return {'success': True}
+
+
+# 사용자: 메시지 가져오기
+@app.route('/api/chat/messages/<session_id>')
+def chat_messages(session_id):
+	"""채팅 메시지 목록 가져오기"""
+	conn = get_db()
+	
+	# 세션 상태 확인
+	session_info = conn.execute('''
+		SELECT status FROM chat_sessions WHERE session_id = ?
+	''', (session_id,)).fetchone()
+	
+	session_status = session_info['status'] if session_info else 'active'
+	
+	messages = conn.execute('''
+		SELECT id, sender_type, sender_name, message, created_at
+		FROM chat_messages
+		WHERE session_id = ?
+		ORDER BY created_at ASC
+	''', (session_id,)).fetchall()
+	
+	# 사용자가 읽은 메시지는 읽음 처리
+	if 'logged_in' not in session:  # 관리자가 아닌 경우
+		conn.execute('''
+			UPDATE chat_messages 
+			SET is_read = 1 
+			WHERE session_id = ? AND sender_type = 'admin' AND is_read = 0
+		''', (session_id,))
+		conn.commit()
+	
+	conn.close()
+	
+	return {
+		'success': True,
+		'session_status': session_status,
+		'messages': [{
+			'id': m['id'],
+			'sender_type': m['sender_type'],
+			'sender_name': m['sender_name'],
+			'message': m['message'],
+			'created_at': m['created_at']
+		} for m in messages]
+	}
+
+
+# 관리자: 메시지 전송
+@app.route('/api/admin/chat/send', methods=['POST'])
+@login_required
+def admin_chat_send():
+	"""관리자가 채팅 메시지 전송"""
+	data = request.get_json()
+	session_id = data.get('session_id')
+	message = data.get('message', '').strip()
+	
+	if not session_id or not message:
+		return {'success': False, 'error': '세션 ID와 메시지가 필요합니다.'}, 400
+	
+	conn = get_db()
+	
+	# 세션 확인
+	session_info = conn.execute('''
+		SELECT * FROM chat_sessions WHERE session_id = ?
+	''', (session_id,)).fetchone()
+	
+	if not session_info:
+		conn.close()
+		return {'success': False, 'error': '세션을 찾을 수 없습니다.'}, 404
+	
+	# 메시지 저장
+	conn.execute('''
+		INSERT INTO chat_messages (session_id, sender_type, sender_name, message, is_read)
+		VALUES (?, 'admin', '관리자', ?, 0)
+	''', (session_id, message))
+	
+	# 세션 업데이트 시간 갱신
+	conn.execute('''
+		UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
+	''', (session_id,))
+	
+	conn.commit()
+	conn.close()
+	
+	return {'success': True}
+
+
+# 관리자: 활성 채팅 세션 목록
+@app.route('/admin/chats')
+@login_required
+def admin_chats():
+	"""관리자 채팅 관리 페이지"""
+	conn = get_db()
+	
+	# 모든 채팅 세션 가져오기
+	sessions = conn.execute('''
+		SELECT 
+			cs.*,
+			(SELECT COUNT(*) FROM chat_messages 
+			 WHERE session_id = cs.session_id AND sender_type = 'user' AND is_read = 0) as unread_count,
+			(SELECT message FROM chat_messages 
+			 WHERE session_id = cs.session_id 
+			 ORDER BY created_at DESC LIMIT 1) as last_message
+		FROM chat_sessions cs
+		ORDER BY cs.updated_at DESC
+	''').fetchall()
+	
+	conn.close()
+	return render_template('admin/chats.html', sessions=sessions)
+
+
+# 관리자: 특정 채팅 세션 상세
+@app.route('/admin/chats/<session_id>')
+@login_required
+def admin_chat_detail(session_id):
+	"""특정 채팅 세션 상세 페이지"""
+	conn = get_db()
+	
+	# 세션 정보
+	session_info = conn.execute('''
+		SELECT * FROM chat_sessions WHERE session_id = ?
+	''', (session_id,)).fetchone()
+	
+	if not session_info:
+		flash('채팅 세션을 찾을 수 없습니다.', 'error')
+		return redirect(url_for('admin_chats'))
+	
+	# 메시지 목록
+	messages = conn.execute('''
+		SELECT * FROM chat_messages
+		WHERE session_id = ?
+		ORDER BY created_at ASC
+	''', (session_id,)).fetchall()
+	
+	# 관리자가 읽은 것으로 표시
+	conn.execute('''
+		UPDATE chat_messages 
+		SET is_read = 1 
+		WHERE session_id = ? AND sender_type = 'user' AND is_read = 0
+	''', (session_id,))
+	conn.commit()
+	
+	conn.close()
+	return render_template('admin/chat_detail.html', session=session_info, messages=messages)
+
+
+# 관리자: 채팅 세션 종료
+@app.route('/admin/chats/<session_id>/close', methods=['POST'])
+@login_required
+def admin_chat_close(session_id):
+	"""채팅 세션 종료"""
+	conn = get_db()
+	conn.execute('''
+		UPDATE chat_sessions SET status = 'closed' WHERE session_id = ?
+	''', (session_id,))
+	conn.commit()
+	conn.close()
+	
+	flash('채팅 세션이 종료되었습니다.', 'success')
+	return redirect(url_for('admin_chats'))
+
+
+"""
+애플리케이션 초기화
+WSGI (gunicorn 등) 로 임포트되는 경우에도 DB 스키마가 보장되도록
+모듈 임포트 시점에 한 번 init_db() 를 호출한다.
+CREATE TABLE IF NOT EXISTS / INSERT OR IGNORE 를 사용하므로
+여러 번 호출되어도 안전하다.
+"""
+with app.app_context():
+	init_db()
+
+
+if __name__ == '__main__':
 	# Allow selecting port via PORT env var (useful if 5000 is occupied).
 	host = os.environ.get('HOST', '127.0.0.1')
 	port = int(os.environ.get('PORT', 5001))
