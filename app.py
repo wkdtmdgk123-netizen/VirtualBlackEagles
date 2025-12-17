@@ -517,18 +517,40 @@ def send_mail():
 @app.route('/')
 def index():
 	lang = request.args.get('lang', 'ko')  # 기본값은 한국어
-	conn = get_db()
-	banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('home',)).fetchone()
-	sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('home',)).fetchall()
-	home_contents = conn.execute('SELECT * FROM home_contents WHERE is_active = 1 ORDER BY order_num').fetchall()
-	
-	# 사이트 이미지 가져오기
-	site_images = {}
-	images = conn.execute('SELECT image_key, image_path FROM site_images').fetchall()
-	for img in images:
-		site_images[img['image_key']] = img['image_path']
-	
-	conn.close()
+	try:
+		conn = get_db()
+		try:
+			banner = conn.execute('SELECT * FROM banner_settings WHERE page_name = ?', ('home',)).fetchone()
+		except:
+			banner = None
+		
+		try:
+			sections = conn.execute('SELECT * FROM page_sections WHERE page_name = ? AND is_active = 1 ORDER BY order_num', ('home',)).fetchall()
+		except:
+			sections = []
+		
+		try:
+			home_contents = conn.execute('SELECT * FROM home_contents WHERE is_active = 1 ORDER BY order_num').fetchall()
+		except:
+			home_contents = []
+		
+		# 사이트 이미지 가져오기
+		site_images = {}
+		try:
+			images = conn.execute('SELECT image_key, image_path FROM site_images').fetchall()
+			for img in images:
+				site_images[img['image_key']] = img['image_path']
+		except:
+			pass
+		
+		conn.close()
+	except Exception as e:
+		# 데이터베이스 에러 시 기본값 사용
+		app.logger.error(f"Database error in index route: {str(e)}")
+		banner = None
+		sections = []
+		home_contents = []
+		site_images = {}
 	
 	# 언어 설정을 템플릿에 전달
 	if lang == 'en':
