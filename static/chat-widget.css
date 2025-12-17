@@ -187,10 +187,9 @@
 
 /* 메시지 스타일 */
 .chat-message {
-    margin-bottom: 12px;
-    display: flex;
-    flex-direction: column;
-    animation: fadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 @keyframes fadeIn {
