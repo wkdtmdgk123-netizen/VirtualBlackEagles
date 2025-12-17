@@ -371,6 +371,11 @@ a:active {
     gap: 0.8rem;
   }
 
+  /* 모바일에서 후원하기 버튼 숨기기 */
+  .donate-btn-header {
+    display: none !important;
+  }
+
   .social-icons {
     gap: 0.5rem;
   }
@@ -711,6 +716,11 @@ a:active {
   section div[style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
     gap: 1.5rem !important;
+  }
+
+  /* 모든 grid 레이아웃을 모바일에서 세로로 */
+  div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
   }
 
   /* Social sections mobile */
