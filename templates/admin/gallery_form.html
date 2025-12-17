@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if photo %}사진 수정{% else %}사진 추가{% endif %} - 관리자</title>
+    <link rel="stylesheet" href="/static/style.css?v=916">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            background: #f7f7fb; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .back-link {
+            color: #007bff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .back-link i {
+            margin-right: 0.5rem;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #007bff;
+        }
+        .admin-header h2 {
+            color: #007bff;
+            margin: 0;
+            font-size: 1.75rem;
+        }
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <a href="{{ url_for('admin_gallery') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> 사진 목록으로 돌아가기
+        </a>
+
+        <div class="admin-header">
+            <h2>📷 {{ '사진 추가' if not photo else '사진 수정' }}</h2>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="title">제목 *</label>
+            <input type="text" 
+                   id="title" 
+                   name="title" 
+                   class="form-control" 
+                   value="{{ photo.title if photo else '' }}" 
+                   required
+                   placeholder="예: 편대비행 훈련">
+            <small class="form-text">사진의 제목을 입력하세요.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="description">설명</label>
+            <textarea id="description" 
+                      name="description" 
+                      class="form-control" 
+                      rows="4"
+                      placeholder="예: T-50B 4기 편대비행 훈련 모습">{{ photo.description if photo else '' }}</textarea>
+            <small class="form-text">사진에 대한 간단한 설명을 입력하세요 (선택사항).</small>
+        </div>
+
+        <div class="form-group">
+            <label for="image_url">이미지 URL *</label>
+            <input type="url" 
+                   id="image_url" 
+                   name="image_url" 
+                   class="form-control" 
+                   value="{{ photo.image_url if photo else '' }}" 
+                   required
+                   placeholder="https://example.com/images/photo.jpg">
+            <small class="form-text">이미지 파일의 URL을 입력하세요. (예: /static/images/photo.jpg 또는 https://...)</small>
+            {% if photo and photo.image_url %}
+            <div class="image-preview">
+                <img src="{{ photo.image_url }}" alt="미리보기" onerror="this.style.display='none'">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="order_num">표시 순서</label>
+                <input type="number" 
+                       id="order_num" 
+                       name="order_num" 
+                       class="form-control" 
+                       value="{{ photo.order_num if photo else 0 }}" 
+                       min="0"
+                       placeholder="0">
+                <small class="form-text">숫자가 작을수록 먼저 표시됩니다.</small>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="is_active">활성화 상태</label>
+                <div class="custom-control custom-switch" style="padding-top: 10px;">
+                    <input type="checkbox" 
+                           class="custom-control-input" 
+                           id="is_active" 
+                           name="is_active" 
+                           value="1"
+                           {{ 'checked' if not photo or photo.is_active else '' }}>
+                    <label class="custom-control-label" for="is_active">
+                        활성화 (체크하면 사용자에게 표시됨)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ '추가하기' if not photo else '수정하기' }}
+            </button>
+            <a href="{{ url_for('admin_gallery') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> 취소
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.admin-header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+.form {
+    max-width: 800px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+
+.custom-control-input {
+    width: auto;
+}
+
+.custom-switch {
+    padding-left: 2.5rem;
+}
+
+.custom-control-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.custom-control-label {
+    position: relative;
+    margin-bottom: 0;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.custom-control-label::before {
+    position: absolute;
+    top: 0.25rem;
+    left: -2.5rem;
+    display: block;
+    width: 2rem;
+    height: 1rem;
+    pointer-events: none;
+    content: "";
+    background-color: #ccc;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.custom-control-label::after {
+    position: absolute;
+    top: calc(0.25rem + 2px);
+    left: calc(-2.5rem + 2px);
+    display: block;
+    width: calc(1rem - 4px);
+    height: calc(1rem - 4px);
+    content: "";
+    background-color: white;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.custom-control-input:checked ~ .custom-control-label::after {
+    transform: translateX(1rem);
+}
+
+.image-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.alert {
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+// 이미지 URL 입력시 실시간 미리보기
+document.getElementById('image_url').addEventListener('change', function() {
+    const url = this.value;
+    let preview = document.querySelector('.image-preview');
+    
+    if (!preview) {
+        preview = document.createElement('div');
+        preview.className = 'image-preview';
+        this.parentElement.appendChild(preview);
+    }
+    
+    if (url) {
+        preview.innerHTML = `<img src="${url}" alt="미리보기" onerror="this.style.display='none'">`;
+    } else {
+        preview.remove();
+    }
+});
+</script>
+
+<style>
+.form {
+    max-width: 800px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+
+.custom-control-input {
+    width: auto;
+}
+
+.custom-switch {
+    padding-left: 2.5rem;
+}
+
+.custom-control-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.custom-control-label {
+    position: relative;
+    margin-bottom: 0;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.custom-control-label::before {
+    position: absolute;
+    top: 0.25rem;
+    left: -2.5rem;
+    display: block;
+    width: 2rem;
+    height: 1rem;
+    pointer-events: none;
+    content: "";
+    background-color: #ccc;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.custom-control-label::after {
+    position: absolute;
+    top: calc(0.25rem + 2px);
+    left: calc(-2.5rem + 2px);
+    display: block;
+    width: calc(1rem - 4px);
+    height: calc(1rem - 4px);
+    content: "";
+    background-color: white;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.custom-control-input:checked ~ .custom-control-label::after {
+    transform: translateX(1rem);
+}
+
+.image-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+</body>
+</html>

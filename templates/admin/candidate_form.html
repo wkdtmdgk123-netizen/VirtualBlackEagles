@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if candidate %}후보자 수정{% else %}후보자 추가{% endif %} - 관리자</title>
+    <link rel="stylesheet" href="/static/style.css?v=915">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f7f7fb; }
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 { color: #007bff; margin-bottom: 1.5rem; }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .required { color: #dc3545; }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .col { flex: 1; }
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: #f8f9fa;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-upload-label:hover {
+            background: #e9ecef;
+            border-color: #0056b3;
+        }
+        .file-upload-input {
+            display: none;
+        }
+        .file-upload-content {
+            text-align: center;
+        }
+        .file-upload-icon {
+            font-size: 48px;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+        .current-photo {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .current-photo img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .photo-preview {
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+        .photo-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('admin_candidates') }}" style="color: #007bff; text-decoration: none;">← 후보자 목록으로 돌아가기</a>
+        </div>
+        
+        <div class="form-container">
+            <h2>{% if candidate %}후보자 수정{% else %}후보자 추가{% endif %}</h2>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="name">이름 <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" value="{% if candidate %}{{ candidate.name }}{% endif %}" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="callsign">콜사인 <span class="required">*</span></label>
+                            <input type="text" id="callsign" name="callsign" value="{% if candidate %}{{ candidate.callsign }}{% endif %}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="order_num">정렬 순서</label>
+                    <input type="number" id="order_num" name="order_num" value="{% if candidate %}{{ candidate.order_num }}{% else %}0{% endif %}">
+                    <small class="form-text">낮은 숫자가 먼저 표시됩니다</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">소개</label>
+                    <textarea id="bio" name="bio" rows="4" placeholder="후보자 소개 내용을 입력하세요">{% if candidate %}{{ candidate.bio }}{% endif %}</textarea>
+                    <small class="form-text">후보자의 간단한 소개 (선택사항)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 업로드</label>
+                    <div class="file-upload-wrapper">
+                        <label for="photo" class="file-upload-label">
+                            <div class="file-upload-content">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <p><strong>클릭하여 사진 선택</strong></p>
+                                <p class="form-text">JPG, JPEG, PNG, GIF 파일만 업로드 가능합니다</p>
+                            </div>
+                        </label>
+                        <input type="file" id="photo" name="photo" class="file-upload-input" accept="image/*">
+                    </div>
+                    
+                    {% if candidate and candidate.photo_url %}
+                    <div class="current-photo">
+                        <p><strong>현재 사진:</strong></p>
+                        <img src="{{ candidate.photo_url }}" alt="{{ candidate.name }}">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="photo-preview" id="photoPreview">
+                        <p><strong>새 사진 미리보기:</strong></p>
+                        <img id="previewImage" src="" alt="미리보기">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="is_active" name="is_active" {% if not candidate or candidate.is_active %}checked{% endif %}>
+                        <label for="is_active" style="margin-bottom: 0;">활성화</label>
+                    </div>
+                    <small class="form-text">비활성화하면 웹사이트에 표시되지 않습니다</small>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if candidate %}수정 완료{% else %}추가하기{% endif %}
+                    </button>
+                    <a href="{{ url_for('admin_candidates') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 취소
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 파일 선택시 미리보기 표시
+        document.getElementById('photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('photoPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

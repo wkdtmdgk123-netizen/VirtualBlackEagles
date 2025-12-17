@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}활동 - 가상 블랙이글스{% endblock %}
+
+{% block banner %}
+<section class="hero banner" style="background-image: url('/static/images/hero.jpg')">
+    <div class="container">
+        <h1 class="banner-title">활동 사진</h1>
+        <p class="banner-subtitle">Virtual Black Eagles Activity Gallery</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+
+<section class="content-section">
+    <div class="container">
+        {% if photos %}
+        <div class="gallery-grid">
+            {% for photo in photos %}
+            <div class="gallery-item" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="gallery-image-wrapper">
+                    <img src="{{ photo.image_url }}" alt="{{ photo.title }}" class="gallery-image">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">
+                            <h3 class="gallery-title">{{ photo.title }}</h3>
+                            {% if photo.description %}
+                            <p class="gallery-description">{{ photo.description }}</p>
+                            {% endif %}
+                            <p class="gallery-date">{{ photo.upload_date[:10] if photo.upload_date else '' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📷</div>
+            <h3>아직 등록된 사진이 없습니다</h3>
+            <p>곧 멋진 활동 사진들을 만나보실 수 있습니다.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.gallery-image-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.gallery-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .gallery-image {
+    transform: scale(1.1);
+}
+
+.gallery-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+}
+
+.gallery-item:hover .gallery-overlay {
+    opacity: 1;
+}
+
+.gallery-info {
+    width: 100%;
+    color: white;
+}
+
+.gallery-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.gallery-description {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.gallery-date {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.empty-state p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .gallery-title {
+        font-size: 1.1rem;
+    }
+    
+    .gallery-description {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Lightbox functionality (optional - can be enhanced with a library)
+document.querySelectorAll('.gallery-image').forEach(img => {
+    img.addEventListener('click', function() {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'lightbox';
+        lightbox.innerHTML = `
+            <div class="lightbox-content">
+                <span class="lightbox-close">&times;</span>
+                <img src="${this.src}" alt="${this.alt}">
+                <div class="lightbox-caption">
+                    <h3>${this.closest('.gallery-item').querySelector('.gallery-title').textContent}</h3>
+                    <p>${this.closest('.gallery-item').querySelector('.gallery-description')?.textContent || ''}</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(lightbox);
+        
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox || e.target.className === 'lightbox-close') {
+                lightbox.remove();
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.lightbox-close:hover {
+    transform: scale(1.2);
+}
+
+.lightbox-caption {
+    margin-top: 20px;
+    color: white;
+    text-align: center;
+    max-width: 600px;
+}
+
+.lightbox-caption h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.lightbox-caption p {
+    font-size: 1rem;
+    opacity: 0.8;
+    line-height: 1.6;
+}
+</style>
+
+<!-- Contact Us + Footer Section -->
+<section class="contact-section" style="background-color: #2D519E; padding: 3rem 0 1rem 0; margin: 0; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;">
+	<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+		<h3 data-i18n="contact.title" style="color: white; font-size: 2rem; margin-bottom: 1rem;">Contact Us</h3>
+		<p data-i18n="contact.text" style="color: white; font-size: 1.2rem; margin-bottom: 2rem;">Discord ㅣ Johnson#4553</p>
+		
+		<div style="border-top: 1px solid rgba(255,255,255,0.3); padding-top: 2rem; margin-top: 2rem; text-align: center;">
+			<p style="color: white; font-size: 1rem; margin: 0;">© 2025 Virtual Black Eagles</p>
+		</div>
+	</div>
+</section>
+
+<style>
+.site-footer {
+	display: none;
+}
+</style>
+{% endblock %}

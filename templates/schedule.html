@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}일정 - Virtual Black Eagles{% endblock %}
+
+{% block banner %}
+<section class="hero banner" style="background-image: url('/static/images/hero.jpg')">
+  <div class="container">
+    <h1 class="banner-title">일정</h1>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<main class="container section" style="padding-left: 7rem; text-align: center;">
+      <h2>일정</h2>
+      <p>블랙이글스의 주요 일정과 예정된 에어쇼를 확인하세요.</p>
+
+      {% if schedules %}
+      <div style="margin-top: 2rem;">
+        {% for schedule in schedules %}
+        <div onclick="location.href='/schedule/{{ schedule.id }}'" style="background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.1)';">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <h3 style="margin: 0 0 0.5rem 0; color: #007bff;">{{ schedule.title }}</h3>
+              {% if schedule.location %}
+              <p style="margin: 0 0 0.5rem 0; color: #666;">
+                📍 {{ schedule.location }}
+              </p>
+              {% endif %}
+              {% if schedule.description %}
+              <p style="margin: 0.5rem 0 0 0; color: #444;">
+                {{ schedule.description[:100] }}{{ '...' if schedule.description|length > 100 else '' }}
+              </p>
+              {% endif %}
+            </div>
+            <div style="text-align: right; min-width: 120px;">
+              <span style="display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; border-radius: 4px; font-weight: 600;">
+                {{ schedule.event_date }}
+              </span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 3rem; background: white; border-radius: 8px; margin-top: 2rem;">
+        <p style="color: #666; font-size: 1.1rem;">📭 등록된 일정이 없습니다.</p>
+      </div>
+      {% endif %}
+    </main>
+
+<!-- Contact Us + Footer Section -->
+<section class="contact-section" style="background-color: #2D519E; padding: 3rem 0 1rem 0; margin: 0; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;">
+	<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+		<h3 data-i18n="contact.title" style="color: white; font-size: 2rem; margin-bottom: 1rem;">Contact Us</h3>
+		<p data-i18n="contact.text" style="color: white; font-size: 1.2rem; margin-bottom: 2rem;">Discord ㅣ Johnson#4553</p>
+		
+		<div style="border-top: 1px solid rgba(255,255,255,0.3); padding-top: 2rem; margin-top: 2rem; text-align: center;">
+			<p style="color: white; font-size: 1rem; margin: 0;">© 2025 Virtual Black Eagles</p>
+		</div>
+	</div>
+</section>
+
+<style>
+.site-footer {
+	display: none;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 관리 - Virtual Black Eagles</title>
+    <link rel="stylesheet" href="/static/style.css?v=900">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #007bff;
+        }
+        .admin-header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .schedule-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .schedule-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .schedule-table th {
+            background: #007bff;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+        .schedule-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .schedule-table tr:hover {
+            background: #f8f9fa;
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .actions a, .actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body style="background: #f7f7fb;">
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>📅 일정 관리</h1>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('admin_schedule_new') }}" class="btn">+ 새 일정</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">대시보드</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="schedule-table">
+            {% if schedules %}
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">번호</th>
+                        <th style="width: 150px;">날짜</th>
+                        <th>행사명</th>
+                        <th style="width: 200px;">장소</th>
+                        <th style="width: 200px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules %}
+                    <tr>
+                        <td>{{ schedule.id }}</td>
+                        <td>{{ schedule.event_date }}</td>
+                        <td>{{ schedule.title }}</td>
+                        <td>{{ schedule.location or '-' }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('admin_schedule_edit', schedule_id=schedule.id) }}" class="btn">수정</a>
+                                <form method="POST" action="{{ url_for('admin_schedule_delete', schedule_id=schedule.id) }}" style="display: inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                    <button type="submit" class="btn btn-danger">삭제</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <p>📭 등록된 일정이 없습니다.</p>
+                <a href="{{ url_for('admin_schedule_new') }}" class="btn">첫 일정 추가하기</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

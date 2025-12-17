@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if section %}섹션 수정{% else %}섹션 추가{% endif %} - 관리자</title>
+    <link rel="stylesheet" href="/static/style.css?v=915">
+    <style>
+        body { background: #f7f7fb; }
+        .admin-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        .admin-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #007bff; }
+        .admin-header h2 { color: #007bff; margin: 0; }
+        .form-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 4px; font-size: 1rem; }
+        .form-group textarea { min-height: 150px; resize: vertical; }
+        .form-group small { display: block; margin-top: 0.25rem; color: #6c757d; }
+        .form-group input[type="checkbox"] { width: auto; margin-right: 0.5rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; text-decoration: none; cursor: pointer; display: inline-block; margin-right: 0.5rem; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('admin_about_sections') }}" style="color: #007bff; text-decoration: none;">← 섹션 목록으로 돌아가기</a>
+        </div>
+        
+        <div class="admin-header">
+            <h2>{% if section %}📋 섹션 수정{% else %}📋 섹션 추가{% endif %}</h2>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="section_type">섹션 유형 <span style="color: red;">*</span></label>
+                    <select id="section_type" name="section_type" required>
+                        <option value="">-- 선택하세요 --</option>
+                        <option value="overview" {% if section and section.section_type == 'overview' %}selected{% endif %}>개요</option>
+                        <option value="mission" {% if section and section.section_type == 'mission' %}selected{% endif %}>임무</option>
+                        <option value="selection" {% if section and section.section_type == 'selection' %}selected{% endif %}>선발</option>
+                        <option value="formation" {% if section and section.section_type == 'formation' %}selected{% endif %}>편대</option>
+                        <option value="aircraft_intro" {% if section and section.section_type == 'aircraft_intro' %}selected{% endif %}>항공기 소개</option>
+                        <option value="aircraft_specs" {% if section and section.section_type == 'aircraft_specs' %}selected{% endif %}>항공기 제원</option>
+                        <option value="aircraft_features" {% if section and section.section_type == 'aircraft_features' %}selected{% endif %}>항공기 특징</option>
+                    </select>
+                    <small>섹션의 용도를 선택하세요</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">제목 <span style="color: red;">*</span></label>
+                    <input type="text" id="title" name="title" 
+                           value="{{ section.title if section else '' }}"
+                           placeholder="예: 임무"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">내용</label>
+                    <textarea id="content" name="content" 
+                              placeholder="섹션 내용을 입력하세요.">{{ section.content if section else '' }}</textarea>
+                    <small>개요 섹션의 상세 설명을 입력하세요</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="photo">이미지 첨부</label>
+                    {% if section and section.image_url %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ section.image_url }}" alt="현재 이미지" style="max-width: 300px; height: auto; border: 1px solid #ddd; padding: 5px;">
+                        <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">현재 이미지: {{ section.image_url }}</p>
+                    </div>
+                    {% endif %}
+                    <input type="file" id="photo" name="photo" accept="image/*">
+                    <small>새 이미지를 선택하면 기존 이미지가 교체됩니다</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="order_num">표시 순서</label>
+                    <input type="number" id="order_num" name="order_num" 
+                           value="{{ section.order_num if section else 0 }}"
+                           min="0" max="999">
+                    <small>숫자가 작을수록 먼저 표시됩니다</small>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="is_active" name="is_active" value="1"
+                               {% if not section or section.is_active %}checked{% endif %}>
+                        활성화
+                    </label>
+                    <small>체크하면 팀소개 페이지에 표시됩니다</small>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                    <a href="{{ url_for('admin_about_sections') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 취소
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
