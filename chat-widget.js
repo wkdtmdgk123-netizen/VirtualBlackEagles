@@ -137,14 +137,22 @@ class ChatWidget {
         }
     }
 
+    getLanguage() {
+        // 언어 감지 (영어 버전 확인)
+        return document.documentElement.lang === 'en' || 
+               window.location.search.includes('lang=en') ||
+               document.querySelector('html[lang="en"]') ? 'en' : 'ko';
+    }
+
     async startChat() {
         const nameInput = document.getElementById('chat-user-name');
         const emailInput = document.getElementById('chat-user-email');
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
+        const lang = this.getLanguage();
 
         if (!name) {
-            alert('이름을 입력해주세요.');
+            alert(lang === 'en' ? 'Please enter your name.' : '이름을 입력해주세요.');
             return;
         }
 
@@ -170,7 +178,7 @@ class ChatWidget {
             }
         } catch (error) {
             console.error('채팅 시작 오류:', error);
-            alert('채팅을 시작할 수 없습니다. 다시 시도해주세요.');
+            alert(lang === 'en' ? 'Unable to start chat. Please try again.' : '채팅을 시작할 수 없습니다. 다시 시도해주세요.');
         }
     }
 
@@ -302,20 +310,27 @@ class ChatWidget {
         const messagesContainer = document.getElementById('chat-messages');
         const shouldScroll = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 50;
 
+        const lang = this.getLanguage();
+        const isEnglish = lang === 'en';
+
         messagesContainer.innerHTML = messages.map(msg => {
             const isUser = msg.sender_type === 'user';
-            const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { 
+            const locale = isEnglish ? 'en-US' : 'ko-KR';
+            const adminLabel = isEnglish ? 'Admin' : '관리자';
+            
+            const time = new Date(msg.created_at).toLocaleTimeString(locale, { 
                 hour: '2-digit', 
-                minute: '2-digit' 
+                minute: '2-digit',
+                hour12: true
             });
 
             return `
-                <div class="chat-message ${isUser ? 'user-message' : 'admin-message'}">
-                    <div class="message-bubble">
-                        ${!isUser ? `<strong>${msg.sender_name || '관리자'}</strong><br>` : ''}
+                <div class="chat-message ${isUser ? 'user' : 'admin'}">
+                    ${!isUser ? `<div class="sender-name">${msg.sender_name || adminLabel}</div>` : ''}
+                    <div class="message-content">
                         ${this.escapeHtml(msg.message)}
-                        <div class="message-time">${time}</div>
                     </div>
+                    <div class="message-time">${time}</div>
                 </div>
             `;
         }).join('');
@@ -326,11 +341,13 @@ class ChatWidget {
 
         // 읽지 않은 관리자 메시지 확인
         if (!this.isOpen) {
-            const unreadCount = messages.filter(m => m.sender_type === 'admin').length;
+            const unreadCount = messages.filter(m => m.sender_type === 'admin' && !m.is_read).length;
             const badge = document.getElementById('chat-unread-badge');
             if (unreadCount > 0) {
                 badge.textContent = unreadCount;
-                badge.style.display = 'block';
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
         }
     }

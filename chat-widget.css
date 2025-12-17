@@ -191,6 +191,7 @@
     display: flex;
     flex-direction: column;
     animation: fadeIn 0.3s ease;
+    width: 100%;
 }
 
 @keyframes fadeIn {
@@ -217,7 +218,10 @@
     padding: 10px 14px;
     border-radius: 12px;
     word-wrap: break-word;
+    word-break: break-word;
     position: relative;
+    white-space: pre-wrap;
+    line-height: 1.4;
 }
 
 .chat-message.user .message-content {
@@ -231,12 +235,22 @@
     color: #333;
     border: 1px solid #e0e0e0;
     border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .chat-message .message-time {
     font-size: 11px;
     color: #999;
     margin-top: 4px;
+    padding: 0 4px;
+}
+
+.chat-message.user .message-time {
+    text-align: right;
+}
+
+.chat-message.admin .message-time {
+    text-align: left;
 }
 
 .chat-message .sender-name {
@@ -244,6 +258,7 @@
     font-weight: 600;
     color: #007bff;
     margin-bottom: 4px;
+    padding: 0 4px;
 }
 
 /* 입력 영역 */
