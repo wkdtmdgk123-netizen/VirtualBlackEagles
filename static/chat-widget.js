@@ -15,7 +15,7 @@ class ChatWidget {
     init() {
         this.createWidget();
         this.attachEventListeners();
-        
+
         // 세션이 있으면 메시지 로드
         if (this.sessionId) {
             this.loadMessages();
@@ -41,7 +41,10 @@ class ChatWidget {
                         <h4>💬 실시간 문의</h4>
                         <p>관리자에게 실시간으로 문의하세요</p>
                     </div>
-                    <button id="chat-close-btn" class="chat-close-btn">&times;</button>
+                    <div class="chat-header-actions">
+                        <button id="chat-end-btn" class="chat-end-btn">종료</button>
+                        <button id="chat-close-btn" class="chat-close-btn">&times;</button>
+                    </div>
                 </div>
 
                 <!-- 이름 입력 폼 -->
@@ -79,9 +82,14 @@ class ChatWidget {
             this.toggleChat();
         });
 
-        // 닫기 버튼
+        // 닫기 버튼 (창만 닫기)
         document.getElementById('chat-close-btn').addEventListener('click', () => {
             this.closeChat();
+        });
+
+        // 채팅 종료 버튼 (세션 종료)
+        document.getElementById('chat-end-btn').addEventListener('click', () => {
+            this.endChat();
         });
 
         // 채팅 시작
@@ -103,6 +111,13 @@ class ChatWidget {
         });
     }
 
+    getLanguage() {
+        // 언어 감지 (영어 버전 확인)
+        return document.documentElement.lang === 'en' ||
+               window.location.search.includes('lang=en') ||
+               document.querySelector('html[lang="en"]') ? 'en' : 'ko';
+    }
+
     toggleChat() {
         const chatWindow = document.getElementById('chat-window');
         this.isOpen = !this.isOpen;
@@ -111,7 +126,7 @@ class ChatWidget {
         if (this.isOpen) {
             // 읽음 배지 숨기기
             document.getElementById('chat-unread-badge').style.display = 'none';
-            
+
             // 세션이 있으면 메시지 로드
             if (this.sessionId) {
                 this.showChatArea();
@@ -142,9 +157,10 @@ class ChatWidget {
         const emailInput = document.getElementById('chat-user-email');
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
+        const lang = this.getLanguage();
 
         if (!name) {
-            alert('이름을 입력해주세요.');
+            alert(lang === 'en' ? 'Please enter your name.' : '이름을 입력해주세요.');
             return;
         }
 
@@ -170,7 +186,42 @@ class ChatWidget {
             }
         } catch (error) {
             console.error('채팅 시작 오류:', error);
-            alert('채팅을 시작할 수 없습니다. 다시 시도해주세요.');
+            alert(lang === 'en' ? 'Unable to start chat. Please try again.' : '채팅을 시작할 수 없습니다. 다시 시도해주세요.');
+        }
+    }
+
+    async endChat() {
+        const lang = this.getLanguage();
+
+        if (!this.sessionId) {
+            this.closeChat();
+            return;
+        }
+
+        const confirmMsg = lang === 'en'
+            ? 'Do you want to end this chat? You can start a new chat later.'
+            : '이 대화를 종료하시겠습니까? 이후에도 새로 문의를 시작할 수 있습니다.';
+
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const response = await fetch('/chat/close', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_id: this.sessionId })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.handleSessionClosed();
+            } else {
+                alert(data.error || (lang === 'en' ? 'Failed to end chat.' : '채팅 종료에 실패했습니다.'));
+            }
+        } catch (error) {
+            console.error('채팅 종료 오류:', error);
+            alert(lang === 'en' ? 'Failed to end chat.' : '채팅 종료 중 오류가 발생했습니다.');
         }
     }
 
@@ -220,7 +271,7 @@ class ChatWidget {
 
             if (data.success) {
                 this.displayMessages(data.messages);
-                
+
                 // 세션 종료 확인
                 if (data.session_status === 'closed') {
                     this.handleSessionClosed();
@@ -265,34 +316,32 @@ class ChatWidget {
         // 기존 세션 정보 삭제
         localStorage.removeItem('chat_session_id');
         localStorage.removeItem('chat_user_name');
-        
-        // 폴링 중지 (이미 중지되어 있지만 확실히)
+
+        // 폴링 중지
         if (this.pollInterval) {
             clearInterval(this.pollInterval);
             this.pollInterval = null;
         }
-        
+
         // 상태 초기화
         this.sessionId = null;
         this.userName = '방문자';
-        
-        // 채팅 메시지 영역과 입력 영역 숨기기
+
+        // 영역 초기화
         const messagesArea = document.getElementById('chat-messages');
         const inputArea = document.getElementById('chat-input-area');
         const nameForm = document.getElementById('chat-name-form');
-        
+
         if (messagesArea) messagesArea.style.display = 'none';
         if (inputArea) inputArea.style.display = 'none';
         if (nameForm) {
             nameForm.style.display = 'flex';
-            // 이름 입력 필드 초기화
             const nameInput = document.getElementById('chat-user-name');
             const emailInput = document.getElementById('chat-user-email');
             if (nameInput) nameInput.value = '';
             if (emailInput) emailInput.value = '';
         }
-        
-        // 메시지 컨테이너 초기화
+
         if (messagesArea) {
             messagesArea.innerHTML = '';
         }
@@ -302,20 +351,27 @@ class ChatWidget {
         const messagesContainer = document.getElementById('chat-messages');
         const shouldScroll = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 50;
 
+        const lang = this.getLanguage();
+        const isEnglish = lang === 'en';
+
         messagesContainer.innerHTML = messages.map(msg => {
             const isUser = msg.sender_type === 'user';
-            const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            const locale = isEnglish ? 'en-US' : 'ko-KR';
+            const adminLabel = isEnglish ? 'Admin' : '관리자';
+
+            const time = new Date(msg.created_at).toLocaleTimeString(locale, {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
             });
 
             return `
-                <div class="chat-message ${isUser ? 'user-message' : 'admin-message'}">
-                    <div class="message-bubble">
-                        ${!isUser ? `<strong>${msg.sender_name || '관리자'}</strong><br>` : ''}
+                <div class="chat-message ${isUser ? 'user' : 'admin'}">
+                    ${!isUser ? `<div class="sender-name">${msg.sender_name || adminLabel}</div>` : ''}
+                    <div class="message-content">
                         ${this.escapeHtml(msg.message)}
-                        <div class="message-time">${time}</div>
                     </div>
+                    <div class="message-time">${time}</div>
                 </div>
             `;
         }).join('');
@@ -324,13 +380,15 @@ class ChatWidget {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // 읽지 않은 관리자 메시지 확인
+        // 읽지 않은 관리자 메시지 배지
         if (!this.isOpen) {
             const unreadCount = messages.filter(m => m.sender_type === 'admin').length;
             const badge = document.getElementById('chat-unread-badge');
             if (unreadCount > 0) {
                 badge.textContent = unreadCount;
-                badge.style.display = 'block';
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
         }
     }
