@@ -2212,6 +2212,40 @@ def chat_messages(session_id):
 	}
 
 
+# 사용자: 채팅 세션 종료
+@app.route('/chat/close', methods=['POST'])
+def chat_close():
+	"""사용자가 채팅 세션을 종료"""
+	data = request.get_json(silent=True) or {}
+	session_id = data.get('session_id')
+	
+	if not session_id:
+		return {'success': False, 'error': '세션 ID가 필요합니다.'}, 400
+	
+	conn = get_db()
+	cursor = conn.cursor()
+	
+	# 세션 존재 여부 확인
+	session_info = cursor.execute('SELECT * FROM chat_sessions WHERE session_id = ?', (session_id,)).fetchone()
+	if not session_info:
+		conn.close()
+		return {'success': False, 'error': '세션을 찾을 수 없습니다.'}, 404
+	
+	# 세션 상태를 closed 로 변경
+	cursor.execute('UPDATE chat_sessions SET status = "closed", updated_at = CURRENT_TIMESTAMP WHERE session_id = ?', (session_id,))
+	
+	# 시스템 메시지(선택)
+	cursor.execute('''
+		INSERT INTO chat_messages (session_id, sender_type, sender_name, message, is_read)
+		VALUES (?, 'admin', '시스템', ?, 1)
+	''', (session_id, '사용자가 채팅을 종료했습니다.'))
+	
+	conn.commit()
+	conn.close()
+	
+	return {'success': True}
+
+
 # 관리자: 메시지 전송
 @app.route('/api/admin/chat/send', methods=['POST'])
 @login_required
@@ -2327,6 +2361,15 @@ def admin_chat_close(session_id):
 	return redirect(url_for('admin_chats'))
 
 
+# 에러 핸들러 추가 (디버깅용)
+@app.errorhandler(500)
+def internal_error(error):
+	import traceback
+	error_msg = traceback.format_exc()
+	app.logger.error(f"500 Internal Server Error: {error_msg}")
+	return f"Internal Server Error: {str(error)}<br><br>Check Render logs for details.", 500
+
+
 """
 애플리케이션 초기화
 WSGI (gunicorn 등) 로 임포트되는 경우에도 DB 스키마가 보장되도록
@@ -2335,7 +2378,13 @@ CREATE TABLE IF NOT EXISTS / INSERT OR IGNORE 를 사용하므로
 여러 번 호출되어도 안전하다.
 """
 with app.app_context():
-	init_db()
+	try:
+		init_db()
+		app.logger.info("Database initialized successfully")
+	except Exception as e:
+		app.logger.error(f"Failed to initialize database: {str(e)}")
+		import traceback
+		app.logger.error(traceback.format_exc())
 
 
 if __name__ == '__main__':
