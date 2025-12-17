@@ -2152,13 +2152,24 @@ def chat_send():
 		return {'success': False, 'error': '세션 ID와 메시지가 필요합니다.'}, 400
 	
 	conn = get_db()
-	conn.execute('''
+	cursor = conn.cursor()
+	
+	# 세션이 없다면 자동으로 생성 (로컬스토리지에 남아있던 오래된 세션 ID 대비)
+	session_info = cursor.execute('SELECT * FROM chat_sessions WHERE session_id = ?', (session_id,)).fetchone()
+	if not session_info:
+		cursor.execute('''
+			INSERT INTO chat_sessions (session_id, user_name, user_email, status)
+			VALUES (?, ?, ?, 'active')
+		''', (session_id, sender_name or '방문자', ''))
+	
+	# 메시지 저장
+	cursor.execute('''
 		INSERT INTO chat_messages (session_id, sender_type, sender_name, message)
 		VALUES (?, ?, ?, ?)
 	''', (session_id, sender_type, sender_name, message))
 	
 	# 세션 업데이트 시간 갱신
-	conn.execute('''
+	cursor.execute('''
 		UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
 	''', (session_id,))
 	
@@ -2228,13 +2239,16 @@ def chat_close():
 	# 세션 존재 여부 확인
 	session_info = cursor.execute('SELECT * FROM chat_sessions WHERE session_id = ?', (session_id,)).fetchone()
 	if not session_info:
-		conn.close()
-		return {'success': False, 'error': '세션을 찾을 수 없습니다.'}, 404
+		# 세션이 없는데 종료를 요청한 경우(오래된 세션 ID 등) - 세션을 생성 후 바로 종료 상태로 기록
+		cursor.execute('''
+			INSERT INTO chat_sessions (session_id, user_name, user_email, status)
+			VALUES (?, ?, ?, 'closed')
+		''', (session_id, '방문자', ''))
+	else:
+		# 세션 상태를 closed 로 변경
+		cursor.execute('UPDATE chat_sessions SET status = "closed", updated_at = CURRENT_TIMESTAMP WHERE session_id = ?', (session_id,))
 	
-	# 세션 상태를 closed 로 변경
-	cursor.execute('UPDATE chat_sessions SET status = "closed", updated_at = CURRENT_TIMESTAMP WHERE session_id = ?', (session_id,))
-	
-	# 시스템 메시지(선택)
+	# 시스템 메시지(선택) - 관리자 화면에서도 종료 시점을 확인할 수 있도록
 	cursor.execute('''
 		INSERT INTO chat_messages (session_id, sender_type, sender_name, message, is_read)
 		VALUES (?, 'admin', '시스템', ?, 1)

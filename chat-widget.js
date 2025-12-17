@@ -235,7 +235,7 @@ class ChatWidget {
 
     showChatArea() {
         document.getElementById('chat-name-form').style.display = 'none';
-        document.getElementById('chat-messages').style.display = 'flex';
+        document.getElementById('chat-messages').style.display = 'block';
         document.getElementById('chat-input-area').style.display = 'flex';
     }
 
