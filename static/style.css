@@ -144,7 +144,19 @@ a:active {
 .banner::before{
   display:none;
 }
-.banner .container{position:relative;z-index:2;text-align:center}
+.banner .container{
+  position:relative;
+  z-index:2;
+  text-align:center;
+  width:100%;
+  max-width:100%;
+  margin:0 auto;
+  padding:0 1rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
 .banner .banner-subtitle{
   font-size:clamp(0.9rem, 2vw, 1.2rem);
   font-weight:400;
@@ -395,10 +407,40 @@ a:active {
     min-height: 400px;
     padding-top: 100px;
     padding-bottom: 1rem;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .banner .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .banner .banner-title {
     font-size: 2.5rem;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-subtitle {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-description {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   /* Mobile Navigation Below Banner */
@@ -673,10 +715,40 @@ a:active {
   .banner {
     min-height: 400px;
     padding-top: 90px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .banner .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .banner .banner-title {
     font-size: 2rem;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-subtitle {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-description {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   #maneuvers div[style*="display:grid"] {
