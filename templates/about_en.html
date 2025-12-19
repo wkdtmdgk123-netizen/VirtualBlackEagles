@@ -75,7 +75,7 @@
         </div>
 
         <!-- Commander's Message -->
-        <div id="commander" class="member-content">
+        <div id="commander" class="member-content" style="display:none !important; visibility:hidden !important; opacity:0 !important; height:0 !important; overflow:hidden !important;">
           {% for commander in commanders %}
           <div style="max-width:1200px;margin:0 auto;padding:2rem 0;">
             <h2 style="text-align:center;font-size:2rem;margin-bottom:3rem;color:#333;">Welcome to the<br>Black Eagles Website</h2>
@@ -556,6 +556,30 @@
 .site-footer {
 	display: none;
 }
+
+/* Ensure member content is hidden by default except pilots */
+.member-content {
+	display: none !important;
+}
+
+.member-content.active {
+	display: block !important;
+}
+
+#pilots.member-content,
+#pilots.member-content.active {
+	display: block !important;
+}
+
+#commander,
+#commander.member-content,
+#commander.member-content.active {
+	display: none !important;
+	visibility: hidden !important;
+	opacity: 0 !important;
+	height: 0 !important;
+	overflow: hidden !important;
+}
 </style>
 {% endblock %}
 
@@ -671,6 +695,37 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
+    // Initialize member content visibility - hide all except pilots
+    const memberContents = document.querySelectorAll('.member-content');
+    const commanderSection = document.getElementById('commander');
+    const pilotsSection = document.getElementById('pilots');
+    
+    // Force hide commander section
+    if (commanderSection) {
+      commanderSection.style.display = 'none';
+      commanderSection.style.visibility = 'hidden';
+      commanderSection.style.opacity = '0';
+      commanderSection.style.height = '0';
+      commanderSection.style.overflow = 'hidden';
+    }
+    
+    // Show only pilots section
+    memberContents.forEach(content => {
+      if (content.id === 'pilots') {
+        content.style.display = 'block';
+        content.style.visibility = 'visible';
+        content.style.opacity = '1';
+      } else if (content.id === 'commander') {
+        content.style.display = 'none';
+        content.style.visibility = 'hidden';
+        content.style.opacity = '0';
+        content.style.height = '0';
+        content.style.overflow = 'hidden';
+      } else {
+        content.style.display = 'none';
+      }
+    });
+
     // Main tab switching
     const tabLinks = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -697,7 +752,6 @@
 
     // Member sub-tab switching
     const memberLinks = document.querySelectorAll('.member-tab-link');
-    const memberContents = document.querySelectorAll('.member-content');
     memberLinks.forEach(link => {
       link.addEventListener('click', function(e) {
         e.preventDefault();
@@ -720,7 +774,21 @@
         
         // Show corresponding content
         const target = this.getAttribute('data-member-tab');
-        document.getElementById(target).style.display = 'block';
+        const targetContent = document.getElementById(target);
+        if (targetContent) {
+          if (target === 'commander') {
+            // Allow commander to be shown only when explicitly clicked
+            targetContent.style.display = 'block';
+            targetContent.style.visibility = 'visible';
+            targetContent.style.opacity = '1';
+            targetContent.style.height = 'auto';
+            targetContent.style.overflow = 'visible';
+          } else {
+            targetContent.style.display = 'block';
+            targetContent.style.visibility = 'visible';
+            targetContent.style.opacity = '1';
+          }
+        }
       });
     });
 

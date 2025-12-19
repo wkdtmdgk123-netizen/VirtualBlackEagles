@@ -4,6 +4,30 @@
 
 {% block banner %}
 <section class="hero banner" style="background-image: url('{{ banner.background_image if banner else '/static/images/hero.jpg' }}'); min-height: 900px; align-items: {{ banner.vertical_position if banner and banner.vertical_position else 'flex-start' }}; padding-top: {{ banner.padding_top if banner and banner.padding_top else 250 }}px;">
+	<style>
+		/* Tablet / Foldable Phone (769px ~ 1024px) */
+		@media (min-width: 769px) and (max-width: 1024px) {
+			.hero.banner {
+				min-height: 600px !important;
+				padding-top: 120px !important;
+			}
+		}
+		/* Mobile (max-width: 768px) */
+		@media (max-width: 768px) {
+			.hero.banner {
+				min-height: 400px !important;
+				padding-top: 60px !important;
+				align-items: flex-start !important;
+			}
+		}
+		/* Small Mobile (max-width: 480px) */
+		@media (max-width: 480px) {
+			.hero.banner {
+				min-height: 400px !important;
+				padding-top: 50px !important;
+			}
+		}
+	</style>
 	<div class="container">
 		{% if banner and banner.subtitle %}
 		<div class="banner-subtitle" style="color: {{ banner.subtitle_color }};">{{ banner.subtitle }}</div>
@@ -86,6 +110,7 @@
 
 <!-- Social Now 섹션 (항상 표시) -->
 <section id="about" class="container section">
+	<p style="text-align: center; font-size: 1.2rem; color: #333; margin-bottom: 1.5rem; font-weight: 500; padding-top: 2rem;">T-50B Mode made in Red Owl by Ensalado</p>
 	<h2 data-i18n="about.title" style="text-align: center; font-size: 2.5rem; letter-spacing: 1.2rem;">Social Now</h2>
 </section>
 
