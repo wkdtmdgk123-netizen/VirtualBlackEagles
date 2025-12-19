@@ -5,8 +5,9 @@
   --text:#222;
 }
 *{box-sizing:border-box}
+html, body{overflow-x:hidden;width:100%;max-width:100vw}
 body{margin:0;padding:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Helvetica Neue", Arial; color:var(--text); background:var(--bg)}
-.container{max-width:100%;margin:0 auto;padding:1rem 2rem}
+.container{max-width:1400px;margin:0 auto;padding:1rem 2rem}
 /* contact-section 은 페이지마다 레이아웃이 달라 inline 스타일로 제어하고,
    전역에서는 기본 여백만 둡니다. */
 .contact-section{
@@ -143,7 +144,19 @@ a:active {
 .banner::before{
   display:none;
 }
-.banner .container{position:relative;z-index:2;text-align:center}
+.banner .container{
+  position:relative;
+  z-index:2;
+  text-align:center;
+  width:100%;
+  max-width:100%;
+  margin:0 auto;
+  padding:0 1rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
 .banner .banner-subtitle{
   font-size:clamp(0.9rem, 2vw, 1.2rem);
   font-weight:400;
@@ -334,6 +347,13 @@ a:active {
 
 /* Responsive */
 @media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+  }
+  
   /* Header Mobile */
   .header-container {
     flex-direction: row;
@@ -363,6 +383,11 @@ a:active {
     gap: 0.8rem;
   }
 
+  /* 모바일에서 후원하기 버튼 숨기기 */
+  .donate-btn-header {
+    display: none !important;
+  }
+
   .social-icons {
     gap: 0.5rem;
   }
@@ -380,12 +405,42 @@ a:active {
   /* Banner Mobile */
   .banner {
     min-height: 400px;
-    padding-top: 100px;
+    padding-top: 60px;
     padding-bottom: 1rem;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+
+  .banner .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .banner .banner-title {
     font-size: 2.5rem;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-subtitle {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-description {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   /* Mobile Navigation Below Banner */
@@ -659,11 +714,41 @@ a:active {
 
   .banner {
     min-height: 400px;
-    padding-top: 90px;
+    padding-top: 50px;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+
+  .banner .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .banner .banner-title {
     font-size: 2rem;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-subtitle {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .banner .banner-description {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   #maneuvers div[style*="display:grid"] {
@@ -679,9 +764,47 @@ a:active {
   }
 }
 
-/* Home Page Responsive */
-@media (max-width: 1024px) {
-  /* Social sections - stack vertically on tablets */
+/* Tablet / Foldable Phone (768px ~ 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Banner for tablets */
+  .banner {
+    min-height: 600px !important;
+    padding-top: 120px !important;
+  }
+
+  .banner .banner-title {
+    font-size: clamp(2.5rem, 6vw, 4rem) !important;
+  }
+
+  .banner .banner-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.3rem) !important;
+  }
+
+  .banner .banner-description {
+    font-size: clamp(1rem, 2vw, 1.2rem) !important;
+  }
+
+  /* Grid layouts - keep 2 columns on tablets */
+  section div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2rem !important;
+  }
+
+  /* Social sections - keep side by side on tablets */
+  #services > div {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2rem !important;
+  }
+
+  /* Container padding for tablets */
+  .container {
+    padding: 1.5rem 2rem;
+  }
+}
+
+/* Home Page Responsive - Smaller tablets and below */
+@media (max-width: 900px) {
+  /* Social sections - stack vertically on smaller tablets */
   #services div[style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
     gap: 2rem !important;
@@ -703,6 +826,11 @@ a:active {
   section div[style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
     gap: 1.5rem !important;
+  }
+
+  /* 모든 grid 레이아웃을 모바일에서 세로로 */
+  div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
   }
 
   /* Social sections mobile */
