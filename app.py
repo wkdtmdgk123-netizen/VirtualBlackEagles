@@ -4,12 +4,54 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mail import Mail, Message
 from functools import wraps
+from PIL import Image
 
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'devsecret-change-this-in-production')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
+
+# 파일 업로드 크기 제한 (16MB)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# 이미지 최적화 함수
+def optimize_image(file_path, max_width=1200, max_height=1200, quality=85):
+	"""
+	업로드된 이미지를 최적화합니다.
+	- EXIF 방향 정보를 처리하여 올바른 방향으로 회전
+	- 최대 크기로 리사이즈 (비율 유지)
+	- JPEG 포맷으로 압축 저장
+	"""
+	try:
+		with Image.open(file_path) as img:
+			# EXIF 방향 정보 처리
+			try:
+				from PIL import ImageOps
+				img = ImageOps.exif_transpose(img)
+			except Exception:
+				pass  # EXIF 정보가 없는 경우 무시
+			
+			# RGB 모드로 변환 (JPEG는 RGBA를 지원하지 않음)
+			if img.mode in ('RGBA', 'LA', 'P'):
+				background = Image.new('RGB', img.size, (255, 255, 255))
+				if img.mode == 'P':
+					img = img.convert('RGBA')
+				background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+				img = background
+			elif img.mode != 'RGB':
+				img = img.convert('RGB')
+			
+			# 비율을 유지하면서 리사이즈
+			img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+			
+			# 최적화하여 저장
+			img.save(file_path, 'JPEG', quality=quality, optimize=True)
+			
+		return True
+	except Exception as e:
+		print(f"이미지 최적화 중 오류 발생: {e}")
+		return False
 
 # Jinja2 필터 추가
 @app.template_filter('youtube_embed')
@@ -1194,11 +1236,16 @@ def admin_pilot_new():
 		photo_url = '/static/images/default-pilot.jpg'  # 기본 이미지
 		file = request.files.get('photo')
 		if file and file.filename:
-			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}_{file.filename}"
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}.jpg"  # 최종 파일은 항상 .jpg
 			filepath = os.path.join('static', 'members', filename)
 			os.makedirs(os.path.dirname(filepath), exist_ok=True)
 			file.save(filepath)
-			photo_url = f'/static/members/{filename}'
+			
+			# 이미지 최적화
+			if optimize_image(filepath):
+				photo_url = f'/static/members/{filename}'
+			else:
+				flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		conn = get_db()
 		conn.execute('''
@@ -1247,11 +1294,16 @@ def admin_pilot_edit(pilot_id):
 		# 파일 업로드 처리
 		file = request.files.get('photo')
 		if file and file.filename:
-			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}_{file.filename}"
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_pilot_{callsign}.jpg"  # 최종 파일은 항상 .jpg
 			filepath = os.path.join('static', 'members', filename)
 			os.makedirs(os.path.dirname(filepath), exist_ok=True)
 			file.save(filepath)
-			photo_url = f'/static/members/{filename}'
+			
+			# 이미지 최적화
+			if optimize_image(filepath):
+				photo_url = f'/static/members/{filename}'
+			else:
+				flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		conn.execute('''
 			UPDATE pilots 
@@ -1336,7 +1388,7 @@ def admin_maintenance_new():
 				# 안전한 파일명 생성
 				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
 				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-				filename = f'{timestamp}_crew_{safe_callsign}{file_ext}'
+				filename = f'{timestamp}_crew_{safe_callsign}.jpg'  # 최종 파일은 항상 .jpg
 				
 				# 파일 저장
 				upload_folder = os.path.join(app.root_path, 'static', 'members')
@@ -1344,7 +1396,11 @@ def admin_maintenance_new():
 				file_path = os.path.join(upload_folder, filename)
 				file.save(file_path)
 				
-				photo_url = f'/static/members/{filename}'
+				# 이미지 최적화
+				if optimize_image(file_path):
+					photo_url = f'/static/members/{filename}'
+				else:
+					flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		# 데이터베이스에 저장
 		conn = get_db()
@@ -1402,7 +1458,7 @@ def admin_maintenance_edit(crew_id):
 				# 안전한 파일명 생성
 				safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
 				timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-				filename = f'{timestamp}_crew_{safe_callsign}{file_ext}'
+				filename = f'{timestamp}_crew_{safe_callsign}.jpg'  # 최종 파일은 항상 .jpg
 				
 				# 파일 저장
 				upload_folder = os.path.join(app.root_path, 'static', 'members')
@@ -1410,7 +1466,11 @@ def admin_maintenance_edit(crew_id):
 				file_path = os.path.join(upload_folder, filename)
 				file.save(file_path)
 				
-				photo_url = f'/static/members/{filename}'
+				# 이미지 최적화
+				if optimize_image(file_path):
+					photo_url = f'/static/members/{filename}'
+				else:
+					flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		# 데이터베이스 업데이트
 		conn.execute('''
@@ -1644,12 +1704,16 @@ def admin_commander_new():
 		if file and file.filename:
 			# 안전한 파일명 생성 (공백, 특수문자 제거)
 			safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
-			file_ext = os.path.splitext(file.filename)[1]  # 확장자 추출
-			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}{file_ext}"
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}.jpg"  # 최종 파일은 항상 .jpg
 			filepath = os.path.join('static', 'members', filename)
 			os.makedirs(os.path.dirname(filepath), exist_ok=True)
 			file.save(filepath)
-			photo_url = f'/static/members/{filename}'
+			
+			# 이미지 최적화
+			if optimize_image(filepath):
+				photo_url = f'/static/members/{filename}'
+			else:
+				flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		conn = get_db()
 		conn.execute('''
@@ -1700,12 +1764,16 @@ def admin_commander_edit(commander_id):
 		if file and file.filename:
 			# 안전한 파일명 생성 (공백, 특수문자 제거)
 			safe_callsign = ''.join(c for c in callsign if c.isalnum() or c in ('-', '_'))
-			file_ext = os.path.splitext(file.filename)[1]  # 확장자 추출
-			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}{file_ext}"
+			filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_commander_{safe_callsign}.jpg"  # 최종 파일은 항상 .jpg
 			filepath = os.path.join('static', 'members', filename)
 			os.makedirs(os.path.dirname(filepath), exist_ok=True)
 			file.save(filepath)
-			photo_url = f'/static/members/{filename}'
+			
+			# 이미지 최적화
+			if optimize_image(filepath):
+				photo_url = f'/static/members/{filename}'
+			else:
+				flash('이미지 처리 중 오류가 발생했습니다.', 'warning')
 		
 		conn.execute('''
 			UPDATE commander_greeting 

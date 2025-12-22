@@ -1,189 +1,293 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if commander %}전대장 인사말 수정{% else %}전대장 인사말 추가{% endif %} - 관리자</title>
-    <link rel="stylesheet" href="/static/style.css?v=915">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% if commander %}전대장 인사말 수정{% else %}전대장 인사말 추가{% endif
+      %} - 관리자
+    </title>
+    <link rel="stylesheet" href="/static/style.css?v=915" />
     <style>
-        body { background: #f7f7fb; }
-        .admin-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .form-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h2 { color: #007bff; margin-bottom: 1.5rem; }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-            color: #333;
-        }
-        .required { color: #dc3545; }
-        input[type="text"],
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-            font-family: inherit;
-        }
-        .form-text {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-            display: block;
-        }
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-check input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 1rem;
-            display: inline-block;
-            text-align: center;
-        }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn:hover { opacity: 0.9; }
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        .button-group .btn {
-            flex: 1;
-        }
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .current-photo {
-            margin-bottom: 1rem;
-        }
-        .current-photo img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+      body {
+        background: #f7f7fb;
+      }
+      .admin-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #007bff;
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .required {
+        color: #dc3545;
+      }
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      textarea {
+        resize: vertical;
+        font-family: inherit;
+      }
+      .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        display: block;
+      }
+      .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .form-check input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+      }
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 1rem;
+        display: inline-block;
+        text-align: center;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+      .btn:hover {
+        opacity: 0.9;
+      }
+      .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      .button-group .btn {
+        flex: 1;
+      }
+      .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .current-photo {
+        margin-bottom: 1rem;
+      }
+      .current-photo img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="admin-container">
-        <div class="form-container">
-            <h2>{% if commander %}전대장 인사말 수정{% else %}전대장 인사말 추가{% endif %}</h2>
+      <div class="form-container">
+        <h2>
+          {% if commander %}전대장 인사말 수정{% else %}전대장 인사말 추가{%
+          endif %}
+        </h2>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %}
 
-            <form method="POST" enctype="multipart/form-data">
-                
-                <div class="form-group">
-                    <label>이름 <span class="required">*</span></label>
-                    <input type="text" name="name" value="{{ commander.name if commander else '' }}" required>
-                </div>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="form-group">
+            <label>이름 <span class="required">*</span></label>
+            <input
+              type="text"
+              name="name"
+              value="{{ commander.name if commander else '' }}"
+              required
+            />
+          </div>
 
-                <div class="form-group">
-                    <label>계급 <span class="required">*</span></label>
-                    <input type="text" name="rank" value="{{ commander.rank if commander else '' }}" required placeholder="예: COMMANDER">
-                </div>
+          <div class="form-group">
+            <label>계급 <span class="required">*</span></label>
+            <input
+              type="text"
+              name="rank"
+              value="{{ commander.rank if commander else '' }}"
+              required
+              placeholder="예: COMMANDER"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label>콜사인 <span class="required">*</span></label>
-                    <input type="text" name="callsign" value="{{ commander.callsign if commander else '' }}" required placeholder="예: #1 Bulta">
-                </div>
+          <div class="form-group">
+            <label>콜사인 <span class="required">*</span></label>
+            <input
+              type="text"
+              name="callsign"
+              value="{{ commander.callsign if commander else '' }}"
+              required
+              placeholder="예: #1 Bulta"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label>기수 <span class="required">*</span></label>
-                    <input type="text" name="generation" value="{{ commander.generation if commander else '' }}" required placeholder="예: VBE 1기">
-                </div>
+          <div class="form-group">
+            <label>기수 <span class="required">*</span></label>
+            <input
+              type="text"
+              name="generation"
+              value="{{ commander.generation if commander else '' }}"
+              required
+              placeholder="예: VBE 1기"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label>주 기종 <span class="required">*</span></label>
-                    <input type="text" name="aircraft" value="{{ commander.aircraft if commander else '' }}" required placeholder="예: F-5">
-                </div>
+          <div class="form-group">
+            <label>주 기종 <span class="required">*</span></label>
+            <input
+              type="text"
+              name="aircraft"
+              value="{{ commander.aircraft if commander else '' }}"
+              required
+              placeholder="예: F-5"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label>인사말</label>
-                    <textarea name="greeting_text" rows="6" placeholder="전대장 인사말을 입력하세요...">{{ commander.greeting_text if commander else '' }}</textarea>
-                </div>
+          <div class="form-group">
+            <label>인사말</label>
+            <textarea
+              name="greeting_text"
+              rows="6"
+              placeholder="전대장 인사말을 입력하세요..."
+            >
+{{ commander.greeting_text if commander else '' }}</textarea
+            >
+          </div>
 
-                <div class="form-group">
-                    <label>사진</label>
-                    {% if commander and commander.photo_url %}
-                        <div class="current-photo">
-                            <img src="{{ commander.photo_url }}" alt="현재 사진">
-                            <span class="form-text">현재 사진</span>
-                        </div>
-                    {% endif %}
-                    <input type="file" name="photo" accept="image/*">
-                    <span class="form-text">JPG, PNG 등의 이미지 파일을 업로드하세요. (최대 5MB)</span>
-                </div>
+          <div class="form-group">
+            <label>사진</label>
+            {% if commander and commander.photo_url %}
+            <div class="current-photo">
+              <img src="{{ commander.photo_url }}" alt="현재 사진" />
+              <span class="form-text">현재 사진</span>
+            </div>
+            {% endif %}
+            <input
+              type="file"
+              id="commanderPhoto"
+              name="photo"
+              accept="image/*"
+            />
+            <span class="form-text"
+              >JPG, PNG 등의 이미지 파일을 업로드하세요. (자동으로
+              최적화됩니다)</span
+            >
+            <div
+              id="commanderPhotoPreview"
+              style="display: none; margin-top: 1rem"
+            >
+              <img
+                id="commanderPreviewImage"
+                src=""
+                alt="미리보기"
+                style="max-width: 200px; border-radius: 8px"
+              />
+            </div>
+          </div>
 
-                <div class="form-group">
-                    <label>정렬 순서</label>
-                    <input type="number" name="order_num" value="{{ commander.order_num if commander else 0 }}">
-                    <span class="form-text">숫자가 작을수록 먼저 표시됩니다.</span>
-                </div>
+          <div class="form-group">
+            <label>정렬 순서</label>
+            <input
+              type="number"
+              name="order_num"
+              value="{{ commander.order_num if commander else 0 }}"
+            />
+            <span class="form-text">숫자가 작을수록 먼저 표시됩니다.</span>
+          </div>
 
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" name="is_active" id="is_active" {% if not commander or commander.is_active %}checked{% endif %}>
-                        <label for="is_active">활성화</label>
-                    </div>
-                    <span class="form-text">체크하면 웹사이트에 표시됩니다.</span>
-                </div>
+          <div class="form-group">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                name="is_active"
+                id="is_active"
+                {%
+                if
+                not
+                commander
+                or
+                commander.is_active
+                %}checked{%
+                endif
+                %}
+              />
+              <label for="is_active">활성화</label>
+            </div>
+            <span class="form-text">체크하면 웹사이트에 표시됩니다.</span>
+          </div>
 
-                <div class="button-group">
-                    <button type="submit" class="btn btn-primary">
-                        {% if commander %}수정하기{% else %}추가하기{% endif %}
-                    </button>
-                    <a href="{{ url_for('admin_commanders') }}" class="btn btn-secondary">취소</a>
-                </div>
-            </form>
-        </div>
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+              {% if commander %}수정하기{% else %}추가하기{% endif %}
+            </button>
+            <a
+              href="{{ url_for('admin_commanders') }}"
+              class="btn btn-secondary"
+              >취소</a
+            >
+          </div>
+        </form>
+      </div>
     </div>
-</body>
+
+    <script src="/static/image-compress.js"></script>
+    <script>
+      // 이미지 입력 필드에 자동 압축 설정
+      ImageCompressor.setupImageInput("commanderPhoto", {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+        previewElementId: "commanderPhotoPreview",
+        previewImageId: "commanderPreviewImage",
+      });
+    </script>
+  </body>
 </html>

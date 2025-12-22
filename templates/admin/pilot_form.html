@@ -1,268 +1,382 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %} - 관리자</title>
-    <link rel="stylesheet" href="/static/style.css?v=915">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% if pilot %}조종사 수정{% else %}조종사 추가{% endif %} - 관리자
+    </title>
+    <link rel="stylesheet" href="/static/style.css?v=915" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
-        body { background: #f7f7fb; }
-        .admin-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .form-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h2 { color: #007bff; margin-bottom: 1.5rem; }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-            color: #333;
-        }
-        .required { color: #dc3545; }
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        .form-text {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-            display: block;
-        }
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            cursor: pointer;
-            display: inline-block;
-            margin-right: 0.5rem;
-        }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .col { flex: 1; }
-        .preview-card {
-            background: white;
-            margin-top: 2rem;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .file-upload-wrapper {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-        .file-upload-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 2rem;
-            background: #f8f9fa;
-            border: 2px dashed #007bff;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .file-upload-label:hover {
-            background: #e9ecef;
-            border-color: #0056b3;
-        }
-        .file-upload-input {
-            display: none;
-        }
-        .file-upload-content {
-            text-align: center;
-        }
-        .file-upload-icon {
-            font-size: 48px;
-            color: #007bff;
-            margin-bottom: 1rem;
-        }
-        .current-photo {
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .current-photo img {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .photo-preview {
-            margin-top: 1rem;
-            text-align: center;
-            display: none;
-        }
-        .photo-preview img {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
+      body {
+        background: #f7f7fb;
+      }
+      .admin-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #007bff;
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .required {
+        color: #dc3545;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+      .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        display: block;
+      }
+      .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-block;
+        margin-right: 0.5rem;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .col {
+        flex: 1;
+      }
+      .preview-card {
+        background: white;
+        margin-top: 2rem;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .file-upload-wrapper {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      .file-upload-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        background: #f8f9fa;
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .file-upload-label:hover {
+        background: #e9ecef;
+        border-color: #0056b3;
+      }
+      .file-upload-input {
+        display: none;
+      }
+      .file-upload-content {
+        text-align: center;
+      }
+      .file-upload-icon {
+        font-size: 48px;
+        color: #007bff;
+        margin-bottom: 1rem;
+      }
+      .current-photo {
+        margin-top: 1rem;
+        text-align: center;
+      }
+      .current-photo img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      .photo-preview {
+        margin-top: 1rem;
+        text-align: center;
+        display: none;
+      }
+      .photo-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="admin-container">
-        <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('admin_pilots') }}" style="color: #007bff; text-decoration: none;">← 조종사 목록으로 돌아가기</a>
-        </div>
-        
-        <div class="form-container">
-            <h2>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %}</h2>
-            
-            <form method="POST" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="number">번호 <span class="required">*</span></label>
-                            <input type="number" id="number" name="number" value="{% if pilot %}{{ pilot.number }}{% endif %}" required min="1" max="99">
-                            <small class="form-text">조종사 번호 (예: 1, 2, 3...)</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="position">포지션 <span class="required">*</span></label>
-                            <input type="text" id="position" name="position" value="{% if pilot %}{{ pilot.position }}{% endif %}" required maxlength="100">
-                            <small class="form-text">예: LEADER, LEFT WING, Slot</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="callsign">콜사인 <span class="required">*</span></label>
-                            <input type="text" id="callsign" name="callsign" value="{% if pilot %}{{ pilot.callsign }}{% endif %}" required maxlength="100">
-                            <small class="form-text">예: Bulta, Fox9, Moon</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="generation">기수 <span class="required">*</span></label>
-                            <input type="text" id="generation" name="generation" value="{% if pilot %}{{ pilot.generation }}{% endif %}" required maxlength="50">
-                            <small class="form-text">예: VBE 1기, VBE 2기</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="aircraft">주 기종 <span class="required">*</span></label>
-                            <input type="text" id="aircraft" name="aircraft" value="{% if pilot %}{{ pilot.aircraft }}{% endif %}" required maxlength="50">
-                            <small class="form-text">예: F-5, F-18</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="order_num">정렬 순서</label>
-                            <input type="number" id="order_num" name="order_num" value="{% if pilot %}{{ pilot.order_num }}{% else %}0{% endif %}" min="0">
-                            <small class="form-text">작은 숫자가 먼저 표시됩니다</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="photo">프로필 사진</label>
-                    <div class="file-upload-wrapper">
-                        <input type="file" id="photo" name="photo" class="file-upload-input" accept="image/*">
-                        <label for="photo" class="file-upload-label">
-                            <div class="file-upload-content">
-                                <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                                <div>클릭하여 이미지 선택</div>
-                                <small class="form-text">JPG, PNG, GIF 형식 지원</small>
-                            </div>
-                        </label>
-                    </div>
-                    {% if pilot and pilot.photo_url %}
-                    <div class="current-photo">
-                        <small class="form-text"><strong>현재 사진:</strong></small>
-                        <img src="{{ pilot.photo_url }}" alt="{{ pilot.callsign }}">
-                    </div>
-                    {% endif %}
-                    <div class="photo-preview" id="photoPreview">
-                        <small class="form-text"><strong>새 사진 미리보기:</strong></small>
-                        <img id="previewImage" src="" alt="미리보기">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>활성 상태</label>
-                    <div class="form-check">
-                        <input type="checkbox" id="is_active" name="is_active" {% if not pilot or pilot.is_active %}checked{% endif %}>
-                        <label for="is_active">활성화</label>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 2rem;">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 저장
-                    </button>
-                    <a href="{{ url_for('admin_pilots') }}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> 취소
-                    </a>
-                </div>
-            </form>
-        </div>
-        
-        {% if pilot %}
-        <div class="preview-card">
-            <h3 style="color: #333; margin-bottom: 1rem;">미리보기</h3>
-            <div style="max-width:600px;background:#f8f9fa;padding:2rem;border-radius:8px;display:flex;align-items:center;gap:2rem;">
-                <img src="{{ pilot.photo_url if pilot.photo_url else '/static/members/moon.jpeg' }}" alt="{{ pilot.callsign }}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;">
-                <div>
-                    <h4 style="color:#007bff;margin:0 0 0.5rem 0;">#{{ pilot.number }} {{ pilot.callsign }}</h4>
-                    <p style="margin:0.5rem 0;color:#666;">기수 : {{ pilot.generation }}</p>
-                    <p style="margin:0.5rem 0;color:#666;">주 기종 : {{ pilot.aircraft }}</p>
-                </div>
+      <div style="margin-bottom: 1rem">
+        <a
+          href="{{ url_for('admin_pilots') }}"
+          style="color: #007bff; text-decoration: none"
+          >← 조종사 목록으로 돌아가기</a
+        >
+      </div>
+
+      <div class="form-container">
+        <h2>{% if pilot %}조종사 수정{% else %}조종사 추가{% endif %}</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="number">번호 <span class="required">*</span></label>
+                <input
+                  type="number"
+                  id="number"
+                  name="number"
+                  value="{% if pilot %}{{ pilot.number }}{% endif %}"
+                  required
+                  min="1"
+                  max="99"
+                />
+                <small class="form-text">조종사 번호 (예: 1, 2, 3...)</small>
+              </div>
             </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="position"
+                  >포지션 <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="position"
+                  name="position"
+                  value="{% if pilot %}{{ pilot.position }}{% endif %}"
+                  required
+                  maxlength="100"
+                />
+                <small class="form-text">예: LEADER, LEFT WING, Slot</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="callsign"
+                  >콜사인 <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="callsign"
+                  name="callsign"
+                  value="{% if pilot %}{{ pilot.callsign }}{% endif %}"
+                  required
+                  maxlength="100"
+                />
+                <small class="form-text">예: Bulta, Fox9, Moon</small>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="generation"
+                  >기수 <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="generation"
+                  name="generation"
+                  value="{% if pilot %}{{ pilot.generation }}{% endif %}"
+                  required
+                  maxlength="50"
+                />
+                <small class="form-text">예: VBE 1기, VBE 2기</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="aircraft"
+                  >주 기종 <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="aircraft"
+                  name="aircraft"
+                  value="{% if pilot %}{{ pilot.aircraft }}{% endif %}"
+                  required
+                  maxlength="50"
+                />
+                <small class="form-text">예: F-5, F-18</small>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="order_num">정렬 순서</label>
+                <input
+                  type="number"
+                  id="order_num"
+                  name="order_num"
+                  value="{% if pilot %}{{ pilot.order_num }}{% else %}0{% endif %}"
+                  min="0"
+                />
+                <small class="form-text">작은 숫자가 먼저 표시됩니다</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="photo">프로필 사진</label>
+            <div class="file-upload-wrapper">
+              <input
+                type="file"
+                id="photo"
+                name="photo"
+                class="file-upload-input"
+                accept="image/*"
+              />
+              <label for="photo" class="file-upload-label">
+                <div class="file-upload-content">
+                  <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                  <div>클릭하여 이미지 선택</div>
+                  <small class="form-text">JPG, PNG, GIF 형식 지원</small>
+                </div>
+              </label>
+            </div>
+            {% if pilot and pilot.photo_url %}
+            <div class="current-photo">
+              <small class="form-text"><strong>현재 사진:</strong></small>
+              <img src="{{ pilot.photo_url }}" alt="{{ pilot.callsign }}" />
+            </div>
+            {% endif %}
+            <div class="photo-preview" id="photoPreview">
+              <small class="form-text"
+                ><strong>새 사진 미리보기:</strong></small
+              >
+              <img id="previewImage" src="" alt="미리보기" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>활성 상태</label>
+            <div class="form-check">
+              <input
+                type="checkbox"
+                id="is_active"
+                name="is_active"
+                {%
+                if
+                not
+                pilot
+                or
+                pilot.is_active
+                %}checked{%
+                endif
+                %}
+              />
+              <label for="is_active">활성화</label>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> 저장
+            </button>
+            <a href="{{ url_for('admin_pilots') }}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> 취소
+            </a>
+          </div>
+        </form>
+      </div>
+
+      {% if pilot %}
+      <div class="preview-card">
+        <h3 style="color: #333; margin-bottom: 1rem">미리보기</h3>
+        <div
+          style="
+            max-width: 600px;
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+          "
+        >
+          <img
+            src="{{ pilot.photo_url if pilot.photo_url else '/static/members/moon.jpeg' }}"
+            alt="{{ pilot.callsign }}"
+            style="
+              width: 150px;
+              height: 150px;
+              border-radius: 50%;
+              object-fit: cover;
+            "
+          />
+          <div>
+            <h4 style="color: #007bff; margin: 0 0 0.5rem 0">
+              #{{ pilot.number }} {{ pilot.callsign }}
+            </h4>
+            <p style="margin: 0.5rem 0; color: #666">
+              기수 : {{ pilot.generation }}
+            </p>
+            <p style="margin: 0.5rem 0; color: #666">
+              주 기종 : {{ pilot.aircraft }}
+            </p>
+          </div>
         </div>
-        {% endif %}
+      </div>
+      {% endif %}
     </div>
 
+    <script src="/static/image-compress.js"></script>
     <script>
-        const photoInput = document.getElementById('photo');
-        const photoPreview = document.getElementById('photoPreview');
-        const previewImage = document.getElementById('previewImage');
-
-        photoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    photoPreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+      // 이미지 입력 필드에 자동 압축 설정
+      ImageCompressor.setupImageInput("photo", {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+        previewElementId: "photoPreview",
+        previewImageId: "previewImage",
+      });
     </script>
-</body>
+  </body>
 </html>
